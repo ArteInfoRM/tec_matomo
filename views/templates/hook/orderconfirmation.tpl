@@ -30,12 +30,12 @@
 <script type="text/javascript">
 // Order Array - Parameters should be generated dynamically
 _paq.push(['trackEcommerceOrder',
-"{/literal}{$order_id}{literal}", // (Required) orderId
-{/literal}{$total_paid}{literal}, // (Required) grandTotal (revenue)
-{/literal}{$total_paid_tax_excl}{literal}, // (Optional) subTotal
-{/literal}{$total_tax}{literal}, // (optional) tax
-{/literal}{$total_shipping}{literal}, // (optional) shipping
-{/literal}{$total_discounts}{literal} // (optional) discount
+"{/literal}{$order_id|escape:"javascript":'UTF-8'}{literal}", // (Required) orderId
+{/literal}{$total_paid|escape:"javascript":'UTF-8'}{literal}, // (Required) grandTotal (revenue)
+{/literal}{$total_paid_tax_excl|escape:"javascript":'UTF-8'}{literal}, // (Optional) subTotal
+{/literal}{$total_tax|escape:"javascript":'UTF-8'}{literal}, // (optional) tax
+{/literal}{$total_shipping|escape:"javascript":'UTF-8'}{literal}, // (optional) shipping
+{/literal}{$total_discounts|escape:"javascript":'UTF-8'}{literal} // (optional) discount
 ]);
 </script>
 {/literal}

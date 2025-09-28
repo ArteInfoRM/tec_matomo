@@ -1,11 +1,11 @@
 {*
 **
-*  2009-2023 Tecnoacquisti.com
+*  2009-2025 Tecnoacquisti.com
 *
 *  For support feel free to contact us on our website at https://www.tecnoacquisti.com
 *
 *  @author    Tecnoacquisti.com <admin@arteinformatica.eu>
-*  @copyright 2009-2023 Tecnoacquisti.com
+*  @copyright 2009-2025 Tecnoacquisti.com
 *  @version   1.0
 *  @license   One Paid Licence By WebSite Using This Module. No Rent. No Sell. No Share.
 *

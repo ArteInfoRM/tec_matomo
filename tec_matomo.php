@@ -22,7 +22,7 @@ class Tec_matomo extends Module
     {
         $this->name = 'tec_matomo';
         $this->tab = 'analytics_stats';
-        $this->version = '1.1.0';
+        $this->version = '1.1.1';
         $this->author = 'Tecnoacquisti.com';
         $this->need_instance = 0;
 
