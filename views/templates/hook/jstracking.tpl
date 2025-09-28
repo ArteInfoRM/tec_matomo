@@ -16,7 +16,7 @@
 <script>
     var _paq = window._paq = window._paq || [];
     /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-    {/literal}{if $matomo_userid == 1 && $motomo_customer > 0}{literal}_paq.push(['setUserId', '{/literal}{$motomo_customer}{literal}']);{/literal}{/if}
+    {/literal}{if $matomo_userid == 1 && $motomo_customer > 0}{literal}_paq.push(['setUserId', '{/literal}{$motomo_customer|escape:"javascript":'UTF-8'}{literal}}{literal}']);{/literal}{/if}
     {literal}
     {/literal}{if $matomo_dntrack == 1}{literal}_paq.push(["setDoNotTrack", true]);{/literal}{/if}
     {literal}
