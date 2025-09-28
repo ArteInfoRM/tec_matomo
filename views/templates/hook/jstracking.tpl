@@ -38,7 +38,7 @@
     {* ===== SUBDOMAINS ===== *}
     {if $matomo_subdomains == 1 && $matomo_basedomain|strlen > 1}
     {* Imposta il cookie a livello di base domain, es. ".example.it" *}
-    _paq.push(['setCookieDomain', '{$matomo_basedomain|escape:"javascript"}']);
+    _paq.push(['setCookieDomain', '{$matomo_basedomain|escape:"javascript":"UTF-8"}']);
     {/if}
 
     {* ===== CROSS-DOMAIN LINKING ===== *}
@@ -78,10 +78,10 @@
 
     {* ===== CAMPAIGN KEYS ===== *}
     {if $matomo_campaign_namekey|strlen}
-    _paq.push(['setCampaignNameKey', '{$matomo_campaign_namekey|escape:"javascript"}']);
+    _paq.push(['setCampaignNameKey', '{$matomo_campaign_namekey|escape:"javascript":"UTF-8"}']);
     {/if}
     {if $matomo_campaign_termkey|strlen}
-    _paq.push(['setCampaignKeywordKey', '{$matomo_campaign_termkey|escape:"javascript"}']);
+    _paq.push(['setCampaignKeywordKey', '{$matomo_campaign_termkey|escape:"javascript":"UTF-8"}']);
     {/if}
 
     {* ===== HEARTBEAT ===== *}
@@ -97,9 +97,9 @@
     {* ===== PRODUCT VIEW (prima del trackPageView) ===== *}
     {if $matomo_is_product == 1 && $matomo_ecommerce == 1 && $mtm_product}
     _paq.push(['setEcommerceView',
-      '{$mtm_product.sku|escape:"javascript"}',
-      '{$mtm_product.name|escape:"javascript"}',
-      [{foreach $mtm_product.cats as $c}'{$c|escape:"javascript"}'{if !$c@last},{/if}{/foreach}],
+      '{$mtm_product.sku|escape:"javascript":"UTF-8"}',
+      '{$mtm_product.name|escape:"javascript":"UTF-8"}',
+      [{foreach $mtm_product.cats as $c}'{$c|escape:"javascript":"UTF-8"}'{if !$c@last},{/if}{/foreach}],
       {$mtm_product.price|floatval}
     ]);
     {/if}

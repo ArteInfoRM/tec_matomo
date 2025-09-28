@@ -22,7 +22,7 @@ class Tec_matomo extends Module
     {
         $this->name = 'tec_matomo';
         $this->tab = 'analytics_stats';
-        $this->version = '1.1.3';
+        $this->version = '1.1.4';
         $this->author = 'Tecnoacquisti.com';
         $this->need_instance = 0;
 
@@ -410,7 +410,7 @@ class Tec_matomo extends Module
             'TEC_MATOMO_JS'       => Tools::getValue('TEC_MATOMO_JS', Configuration::get('TEC_MATOMO_JS')),
 
             // PRIVACY
-            'TEC_MATOMO_PRIVACY_MODE' => Tools::getValue('TEC_MATOMO_PRIVACY_MODE', Configuration::get('TEC_MATOMO_PRIVACY_MODE', 'none')),
+            'TEC_MATOMO_PRIVACY_MODE' => Tools::getValue('TEC_MATOMO_PRIVACY_MODE', Configuration::get('TEC_MATOMO_PRIVACY_MODE')),
             'TEC_MATOMO_SECURECOOKIE' => Tools::getValue('TEC_MATOMO_SECURECOOKIE', Configuration::get('TEC_MATOMO_SECURECOOKIE')),
 
             // SUBDOMAINS & CROSS-DOMAIN
