@@ -1,0 +1,28 @@
+# Dipendenze PHP / Node
+/vendor/
+/node_modules/
+
+# File temporanei e cache
+*.log
+*.zip
+var/
+cache/
+tmp/
+
+# IDE / Editor
+.idea/
+.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# File PHPUnit / test
+/phpunit.xml.cache
+/tests/_output/
+/coverage/
+
+# PrestaShop runtime
+/config/xml/
+/translations/cldr/datas/
+/themes/*/cache/

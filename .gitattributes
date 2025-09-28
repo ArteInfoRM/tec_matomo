@@ -1,0 +1,30 @@
+# imposta LF come fine riga per tutti i file di testo
+* text=auto eol=lf
+
+# mantieni binari intatti
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.mp4 binary
+*.mp3 binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# Escludi file non necessari dagli archive (zip/tarball delle release)
+.gitignore export-ignore
+.gitattributes export-ignore
+.editorconfig export-ignore
+/tests/ export-ignore
+/.github/ export-ignore
+/phpunit.xml.dist export-ignore
+/build.sh export-ignore
+/Makefile export-ignore
+/config.xml export-ignore
+/config_it.xml  export-ignore
