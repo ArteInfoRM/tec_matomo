@@ -50,7 +50,7 @@
         {if $matomo_crossdomain_list|@count > 0}
         {foreach from=$matomo_crossdomain_list item=__d}
         {if $__d|strlen}
-        {literal}  domains.push('{/literal}{$__d|escape:'javascript'}{literal}');{/literal}
+        {literal}  domains.push('{/literal}{$__d|escape:"javascript":"UTF-8"}{literal}');{/literal}
         {/if}
         {/foreach}
         {/if}
@@ -60,7 +60,7 @@
         *}
         {if $matomo_subdomains == 1 && $matomo_basedomain|strlen > 1}
         {capture assign=__base_no_dot}{$matomo_basedomain|substr:1}{/capture}
-        {literal}  domains.push('*.{/literal}{$__base_no_dot|escape:'javascript'}{literal}');{/literal}
+        {literal}  domains.push('*.{/literal}{$__base_no_dot|escape:"javascript":"UTF-8"}{literal}');{/literal}
         {/if}
         {literal}
         if (domains.length > 0) {
