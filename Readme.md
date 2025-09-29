@@ -25,7 +25,7 @@ This module allows merchants to replace Google Analytics with Matomo, keeping **
 
 ## Requirements
 
-- PrestaShop 8.x or 9.x  
+- PrestaShop 1.7.8 or 9.x  
 - Matomo On-Premise or Matomo Cloud instance (URL and Site ID required)
 
 ## Installation
