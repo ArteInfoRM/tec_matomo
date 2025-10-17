@@ -1,6 +1,7 @@
 # Matomo Analytics for PrestaShop
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Built for PrestaShop](https://img.shields.io/badge/Built%20for-PrestaShop-DF0067?logo=prestashop&logoColor=white)  
 
 Matomo Analytics integration module for PrestaShop with advanced ecommerce tracking and privacy features.  
 This module allows merchants to replace Google Analytics with Matomo, keeping **100% data ownership** and ensuring full **GDPR compliance**.
