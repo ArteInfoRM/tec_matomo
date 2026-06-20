@@ -5,6 +5,7 @@
 # File temporanei e cache
 *.log
 *.zip
+/dist/
 var/
 cache/
 tmp/
@@ -23,6 +24,7 @@ Thumbs.db
 /coverage/
 
 # PrestaShop runtime
+/config_*.xml
 /config/xml/
 /translations/cldr/datas/
 /themes/*/cache/

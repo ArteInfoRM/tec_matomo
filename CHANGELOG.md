@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.6] - 2026-06-20
+### Added
+- Dedicated Matomo Analytics admin controller with menu entry and custom date range selector.
+- Spanish, German, and French translations.
+- Top 10 countries, products, and categories by revenue in the dedicated statistics controller.
+- CSV, JSON, and XML export for the dedicated statistics controller dataset.
+- Product back-office widget with Matomo ecommerce metrics by tracked SKU.
+- Back-office dashboard widget with Matomo ecommerce KPIs, visits, and revenue by channel.
+- Optional Art Cookie Choices Pro integration for Matomo cookie consent.
+
+### Changed
+- Dashboard and statistics channel revenue now use Matomo referrer types instead of detailed referrer rows.
+- The dedicated statistics controller calendar now includes quick period presets for month, year, day -1, month -1, and year -1.
+- Removed the legacy Matomo ImageGraph preview from the module configuration page.
+- Consent manager settings now use a single selector with Disabled, LG Cookies Law, and Art Cookie Choices Pro options.
+- Minimum PrestaShop compatibility is now 1.7.5.
+
 ## [1.1.5] – 2025-09-29
 ### Added
 - Product view tracking: `setEcommerceView` is now pushed **before** `trackPageView` to correctly record product impressions in Matomo.

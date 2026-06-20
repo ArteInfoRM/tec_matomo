@@ -1,0 +1,201 @@
+.tec-matomo-dashboard-widget .tec-matomo-dashboard-notice {
+  margin: 10px 0 12px;
+  padding: 8px 10px;
+}
+
+.tec-matomo-dashboard-widget .tec-matomo-widget-kpis {
+  margin: 10px -5px 15px;
+}
+
+.tec-matomo-dashboard-widget .tec-matomo-widget-kpi {
+  background: #f8f9fb;
+  border: 1px solid #e5e9f0;
+  min-height: 74px;
+  padding: 10px 6px;
+}
+
+.tec-matomo-dashboard-widget .tec-matomo-widget-number {
+  display: block;
+  color: #333;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.tec-matomo-dashboard-widget .tec-matomo-widget-label {
+  display: block;
+  color: #666;
+  font-size: 11px;
+  line-height: 1.2;
+  margin-top: 5px;
+  text-transform: uppercase;
+}
+
+.tec-matomo-dashboard-widget .tec-matomo-widget-title {
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 12px 0 6px;
+}
+
+.tec-matomo-dashboard-widget .tec-matomo-channel-table {
+  margin-top: 8px;
+}
+
+.tec-matomo-dashboard-widget .tec-matomo-channel-table .table {
+  margin-bottom: 5px;
+}
+
+.tec-matomo-dashboard-widget .tec-matomo-channel-table th,
+.tec-matomo-dashboard-widget .tec-matomo-channel-table td {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.tec-matomo-dashboard-widget .tec-matomo-empty-channel-data {
+  margin: 8px 0 0;
+}
+
+.tec-matomo-product-widget .tec-matomo-product-kpis {
+  margin-bottom: 15px;
+}
+
+.tec-matomo-product-widget .tec-matomo-product-kpis strong {
+  display: block;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tec-matomo-product-widget .tec-matomo-product-kpis span {
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.tec-matomo-product-widget h4 {
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 12px 0 6px;
+}
+
+.tec-matomo-product-widget .table th,
+.tec-matomo-product-widget .table td {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.tec-matomo-product-widget .tec-matomo-product-aliases code {
+  display: inline-block;
+  margin: 0 4px 4px 0;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin: 6px 0 14px;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-presets {
+  display: inline-flex;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-presets .btn {
+  min-height: 38px;
+  padding: 8px 16px;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-calendar {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-calendar .form-group {
+  align-items: center;
+  display: inline-flex;
+  margin: 0;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-calendar label {
+  margin: 0 8px 0 0;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-calendar .form-control {
+  height: 38px;
+  min-width: 142px;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-calendar .btn {
+  min-height: 38px;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-period {
+  margin: 4px 0 12px;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-export {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-export .form-group {
+  align-items: center;
+  display: inline-flex;
+  margin: 0;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-export label {
+  margin: 0 8px 0 0;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-export .form-control {
+  height: 38px;
+  min-width: 92px;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-export-button {
+  height: 38px;
+  padding: 8px 16px;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-config-link {
+  white-space: nowrap;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-kpis {
+  margin-bottom: 15px;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-kpis strong {
+  display: block;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tec-matomo-stats-page .tec-matomo-stats-kpis span {
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.tec-matomo-stats-page .table th,
+.tec-matomo-stats-page .table td {
+  font-size: 12px;
+  padding: 6px 8px;
+}

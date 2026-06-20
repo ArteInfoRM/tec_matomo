@@ -1,11 +1,11 @@
 {*
 **
-*  2009-2025 Tecnoacquisti.com
+*  2009-2026 Tecnoacquisti.com
 *
 *  For support feel free to contact us on our website at https://www.tecnoacquisti.com
 *
 *  @author    Tecnoacquisti.com <admin@arteinformatica.eu>
-*  @copyright 2009-2025 Tecnoacquisti.com
+*  @copyright 2009-2026 Tecnoacquisti.com
 *  @version   1.0
 *  @license   One Paid Licence By WebSite Using This Module. No Rent. No Sell. No Share.
 *
@@ -18,8 +18,8 @@
     {/literal}
 
     {* ===== PRIVACY ===== *}
-    {if $matomo_lg_enable == 1}
-    // LG Integration: We always start with requireCookieConsent
+    {if $matomo_lg_enable == 1 || $matomo_artcookie_enable == 1}
+    // Consent manager integration: We always start with requireCookieConsent
     _paq.push(['requireCookieConsent']);
     {else}
     {if $matomo_privacy_mode == 'cookieless'}
@@ -127,5 +127,4 @@
     </noscript>
 {/if}
 <!-- End Matomo PrestaShop Module by https://www.tecnoacquisti.com -->
-
 

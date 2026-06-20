@@ -1,13 +1,13 @@
 <?php
 /**
- *  2009-2025 Matomo Analytics PrestaShop Module
+ *  2009-2026 Matomo Analytics PrestaShop Module
  *
  *  For support feel free to contact us on our website at https://www.tecnoacquisti.com
  *
  *  @author    Tecnoacquisti.com <shop@tecnoacquisti.com>
- *  @copyright 2009-2025 Tecnoacquisti.com
+ *  @copyright 2009-2026 Tecnoacquisti.com
  *  @license   One Paid Licence By WebSite Using This Module. No Rent. No Sell. No Share.
- *  @version   1.0
+ *  @version   1.1.6
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -22,7 +22,7 @@ class Tec_matomo extends Module
     {
         $this->name = 'tec_matomo';
         $this->tab = 'analytics_stats';
-        $this->version = '1.1.5';
+        $this->version = '1.1.6';
         $this->author = 'Tecnoacquisti.com';
         $this->need_instance = 0;
 
@@ -36,7 +36,7 @@ class Tec_matomo extends Module
         $this->displayName = $this->l('Matomo Analytics for PrestaShop, with ecommerce tracking');
         $this->description = $this->l('Matomo is Google Analytics alternative that protects your data and your customers\' privacy');
 
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+        $this->ps_versions_compliancy = ['min' => '1.7.5', 'max' => _PS_VERSION_];
     }
 
     /**
@@ -66,15 +66,22 @@ class Tec_matomo extends Module
         Configuration::updateValue('TEC_MATOMO_CAMPAIGN_TERMKEY', '');
         Configuration::updateValue('TEC_MATOMO_HEARTBEAT_ENABLE', false);
         Configuration::updateValue('TEC_MATOMO_HEARTBEAT_SEC', 15);
+        Configuration::updateValue('TEC_MATOMO_CONSENT_MANAGER', 'disabled');
         Configuration::updateValue('TEC_MATOMO_LG_ENABLE', false);
         Configuration::updateValue('TEC_MATOMO_LG_PURPOSE', 3); // default purpose ID for Analytics in LG Cookies Law
+        Configuration::updateValue('TEC_MATOMO_ARTCOOKIE_ENABLE', false);
 
         return parent::install() &&
+            $this->installStatsTab() &&
             $this->registerHook('displayFooterProduct') &&
             $this->registerHook('displayFooter') &&
             $this->registerHook('orderConfirmation') &&
             $this->registerHook('actionFrontControllerSetMedia') &&
-            $this->registerHook('displayAfterBodyOpeningTag');
+            $this->registerHook('displayAfterBodyOpeningTag') &&
+            $this->registerHook('displayBackOfficeHeader') &&
+            $this->registerHook('actionDispatcherBefore') &&
+            $this->registerHook('dashboardZoneTwo') &&
+            $this->registerHook('displayAdminProductsExtra');
     }
 
     public function uninstall()
@@ -98,10 +105,53 @@ class Tec_matomo extends Module
         Configuration::deleteByName('TEC_MATOMO_CAMPAIGN_TERMKEY');
         Configuration::deleteByName('TEC_MATOMO_HEARTBEAT_ENABLE');
         Configuration::deleteByName('TEC_MATOMO_HEARTBEAT_SEC');
+        Configuration::deleteByName('TEC_MATOMO_CONSENT_MANAGER');
         Configuration::deleteByName('TEC_MATOMO_LG_ENABLE');
         Configuration::deleteByName('TEC_MATOMO_LG_PURPOSE');
+        Configuration::deleteByName('TEC_MATOMO_ARTCOOKIE_ENABLE');
 
-        return parent::uninstall();
+        return $this->uninstallStatsTab() && parent::uninstall();
+    }
+
+    public function installStatsTab()
+    {
+        $idTab = (int) Tab::getIdFromClassName('AdminTecMatomoStats');
+        if ($idTab > 0) {
+            return true;
+        }
+
+        $tab = new Tab();
+        $tab->active = true;
+        $tab->class_name = 'AdminTecMatomoStats';
+        $tab->module = $this->name;
+        $tab->id_parent = $this->getStatsSiblingParentId();
+        $tab->icon = 'analytics';
+
+        foreach (Language::getLanguages(false) as $language) {
+            $tab->name[(int) $language['id_lang']] = 'Matomo Analytics';
+        }
+
+        return (bool) $tab->add();
+    }
+
+    public function uninstallStatsTab()
+    {
+        $idTab = (int) Tab::getIdFromClassName('AdminTecMatomoStats');
+        if ($idTab <= 0) {
+            return true;
+        }
+
+        return (bool) (new Tab($idTab))->delete();
+    }
+
+    protected function getStatsSiblingParentId()
+    {
+        $idStats = (int) Tab::getIdFromClassName('AdminStats');
+        if ($idStats <= 0) {
+            return 0;
+        }
+
+        return (int) (new Tab($idStats))->id_parent;
     }
 
     /**
@@ -113,9 +163,6 @@ class Tec_matomo extends Module
          * If values have been submitted in the form, process.
          */
         $output = '';
-        $token = Configuration::get('TEC_MATOMO_TOKEN');
-        $matomo_url = Configuration::get('TEC_MATOMO_URL');
-        $matomo_id = Configuration::get('TEC_MATOMO_SITEID');
         $useSsl = (bool)Configuration::get('PS_SSL_ENABLED_EVERYWHERE') || (bool)Configuration::get('PS_SSL_ENABLED');
         $shop_base_url = $this->context->link->getBaseLink((int)$this->context->shop->id, $useSsl);
 
@@ -123,23 +170,13 @@ class Tec_matomo extends Module
             $output .= $this->postProcess();
         }
 
-        $graph_visits = null;
-        if ($token != '' && $matomo_url != '' && $matomo_id > 0) {
-            $url = $matomo_url;
-            $url .= "?module=API&method=ImageGraph.get";
-            $url .= "&idSite=".(int)$matomo_id."&apiModule=VisitsSummary&apiAction=get";
-            $url .= "&graphType=verticalBar&period=day&date=previous30&width=1680&height=500";
-            $url .= "&token_auth=$token";
-            $graph_visits = $url;
-
-        }
-
         $this->smarty->assign(array(
-            'graph_visits' => $graph_visits,
             'shop_base_url' => $shop_base_url,
+            'mtm_stats_url' => $this->context->link->getAdminLink('AdminTecMatomoStats'),
         ));
 
         $this->context->smarty->assign('module_dir', $this->_path);
+        $this->context->controller->addJS($this->_path . 'views/js/back.js');
 
         $output .= $this->display(__FILE__, 'views/templates/admin/configure.tpl');
         $output .= $this->renderForm();
@@ -265,33 +302,38 @@ class Tec_matomo extends Module
                             array('id'=>'privacy_consent','value'=>'consent','label'=>$this->l('Require cookie consent')),
                         ),
                     ),
-                    // === INTEGRAZIONE LG COOKIES LAW ===
-                    array(
-                        'type' => 'switch',
-                        'label' => $this->l('Enable LG Cookies Law integration'),
-                        'name' => 'TEC_MATOMO_LG_ENABLE',
-                        'is_bool' => true,
-                        'desc' => $this->l('If enabled, the module listens to the LG Cookies Law banner (Analitici purpose) to enable/disable Matomo cookies.'),
-                        'values' => array(
-                            array(
-                                'id' => 'active_on',
-                                'value' => true,
-                                'label' => $this->l('Enabled')
-                            ),
-                            array(
-                                'id' => 'active_off',
-                                'value' => false,
-                                'label' => $this->l('Disabled')
-                            )
-                        ),
-                    ),
-                    array(
+                    [
+                        'type' => 'select',
+                        'label' => $this->l('Consent manager integration'),
+                        'name' => 'TEC_MATOMO_CONSENT_MANAGER',
+                        'desc' => $this->l('Choose which consent banner should control Matomo cookie consent.'),
+                        'options' => [
+                            'query' => [
+                                [
+                                    'id' => 'disabled',
+                                    'name' => $this->l('Disabled')
+                                ],
+                                [
+                                    'id' => 'lg',
+                                    'name' => $this->l('LG Cookies Law (Linea Grafica)')
+                                ],
+                                [
+                                    'id' => 'artcookie',
+                                    'name' => $this->l('Art Cookie Choices Pro')
+                                ],
+                            ],
+                            'id' => 'id',
+                            'name' => 'name',
+                        ],
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('LG Cookies Law purpose ID'),
                         'name' => 'TEC_MATOMO_LG_PURPOSE',
                         'class' => 'fixed-width-xs',
+                        'form_group_class' => 'tec-matomo-lg-purpose-row',
                         'desc' => $this->l('Numeric ID of the LG purpose for Analytics (default is 3, corresponding to lgcookieslaw_purpose_3).'),
-                    ),
+                    ],
                     array(
                         'type' => 'switch',
                         'label' => $this->l('Secure cookie (HTTPS only)'),
@@ -429,9 +471,28 @@ class Tec_matomo extends Module
             'TEC_MATOMO_HEARTBEAT_SEC'     => Tools::getValue('TEC_MATOMO_HEARTBEAT_SEC', Configuration::get('TEC_MATOMO_HEARTBEAT_SEC')),
 
             // LEGAL/GDPR
-            'TEC_MATOMO_LG_ENABLE'  => (int) Tools::getValue('TEC_MATOMO_LG_ENABLE',  (int)Configuration::get('TEC_MATOMO_LG_ENABLE')),
-            'TEC_MATOMO_LG_PURPOSE' => (int) Tools::getValue('TEC_MATOMO_LG_PURPOSE', (int)Configuration::get('TEC_MATOMO_LG_PURPOSE'))
+            'TEC_MATOMO_CONSENT_MANAGER' => Tools::getValue('TEC_MATOMO_CONSENT_MANAGER', $this->getConsentManagerMode()),
+            'TEC_MATOMO_LG_PURPOSE' => (int) Tools::getValue('TEC_MATOMO_LG_PURPOSE', (int)Configuration::get('TEC_MATOMO_LG_PURPOSE')),
         );
+    }
+
+    protected function getConsentManagerMode()
+    {
+        $manager = (string) Configuration::get('TEC_MATOMO_CONSENT_MANAGER');
+
+        if (in_array($manager, ['disabled', 'lg', 'artcookie'], true)) {
+            return $manager;
+        }
+
+        if ((int) Configuration::get('TEC_MATOMO_LG_ENABLE') === 1) {
+            return 'lg';
+        }
+
+        if ((int) Configuration::get('TEC_MATOMO_ARTCOOKIE_ENABLE') === 1) {
+            return 'artcookie';
+        }
+
+        return 'disabled';
     }
 
     /**
@@ -447,6 +508,7 @@ class Tec_matomo extends Module
 
         // Enum privacy consentiti
         $allowedPrivacy = array('none', 'cookieless', 'consent');
+        $allowedConsentManagers = ['disabled', 'lg', 'artcookie'];
 
         foreach (array_keys($form_values) as $key) {
 
@@ -492,6 +554,16 @@ class Tec_matomo extends Module
                     Configuration::updateValue($key, $mode);
                     break;
 
+                case 'TEC_MATOMO_CONSENT_MANAGER':
+                    $manager = (string) Tools::getValue($key, 'disabled');
+                    if (!in_array($manager, $allowedConsentManagers, true)) {
+                        $manager = 'disabled';
+                    }
+                    Configuration::updateValue('TEC_MATOMO_CONSENT_MANAGER', $manager);
+                    Configuration::updateValue('TEC_MATOMO_LG_ENABLE', $manager === 'lg' ? 1 : 0);
+                    Configuration::updateValue('TEC_MATOMO_ARTCOOKIE_ENABLE', $manager === 'artcookie' ? 1 : 0);
+                    break;
+
                 // --- BOOLEANS (switch/radio) ---
                 case 'TEC_MATOMO_ACTIVE':
                 case 'TEC_MATOMO_ECOMMERCE':
@@ -502,6 +574,7 @@ class Tec_matomo extends Module
                 case 'TEC_MATOMO_CROSSDOMAIN':
                 case 'TEC_MATOMO_TITLE_DOMAIN':
                 case 'TEC_MATOMO_HEARTBEAT_ENABLE':
+                case 'TEC_MATOMO_ARTCOOKIE_ENABLE':
                     Configuration::updateValue($key, (int)(bool)Tools::getValue($key));
                     break;
 
@@ -615,7 +688,9 @@ class Tec_matomo extends Module
         // =======================
         // Bridge LG Cookies Law
         // =======================
-        if ((int) Configuration::get('TEC_MATOMO_LG_ENABLE') === 1) {
+        $consentManager = $this->getConsentManagerMode();
+
+        if ($consentManager === 'lg') {
             $purpose = (int) Configuration::get('TEC_MATOMO_LG_PURPOSE');
             if ($purpose <= 0) { $purpose = 3; }
 
@@ -634,6 +709,625 @@ class Tec_matomo extends Module
             );
         }
 
+        if ($consentManager === 'artcookie') {
+            $this->context->controller->registerJavascript(
+                'module-' . $this->name . '-artcookie-bridge',
+                $this->_path . 'views/js/matomo-artcookie-bridge.js',
+                [
+                    'position' => 'head',
+                    'priority' => 41,
+                    'attributes' => 'defer',
+                ]
+            );
+        }
+
+    }
+
+    public function hookDisplayBackOfficeHeader($params)
+    {
+        $controllerName = isset($this->context->controller->controller_name)
+            ? (string) $this->context->controller->controller_name
+            : (string) Tools::getValue('controller');
+
+        if (!in_array($controllerName, ['AdminTecMatomoStats', 'AdminDashboard', 'AdminModules', 'AdminProducts', 'AdminProduct', 'AdminCatalog'], true)) {
+            return;
+        }
+
+        $this->context->controller->addCSS($this->_path . 'views/css/admin.css');
+    }
+
+    public function hookDisplayAdminProductsExtra($params)
+    {
+        $idProduct = isset($params['id_product']) ? (int) $params['id_product'] : (int) Tools::getValue('id_product');
+        if ($idProduct <= 0) {
+            return '';
+        }
+
+        $dateRange = [
+            'date_from' => date('Y-m-d', strtotime('-30 days')),
+            'date_to' => date('Y-m-d', strtotime('-1 day')),
+            'label' => $this->l('Last 30 days'),
+        ];
+        $productData = $this->getProductMatomoData($idProduct, $dateRange);
+
+        $this->context->smarty->assign([
+            'mtm_product_is_connected' => $this->isMatomoApiConfigured(),
+            'mtm_product_api_error' => $productData['error'],
+            'mtm_product_metrics' => $productData['metrics'],
+            'mtm_product_rows' => $productData['rows'],
+            'mtm_product_aliases' => $productData['aliases'],
+            'mtm_product_period_label' => $dateRange['label'],
+        ]);
+
+        return $this->display(__FILE__, 'views/templates/admin/product_metrics.tpl');
+    }
+
+    public function hookActionDispatcherBefore($params)
+    {
+        unset($params);
+
+        if (!defined('_PS_ADMIN_DIR_') || (string) Tools::getValue('controller') !== 'AdminDashboard') {
+            return;
+        }
+
+        $this->ensureDashboardEmployeeDateRange();
+        $this->sanitizeDashboardRequestDate('date_from', (string) $this->context->employee->stats_date_from);
+        $this->sanitizeDashboardRequestDate('date_to', (string) $this->context->employee->stats_date_to);
+    }
+
+    public function hookDashboardZoneTwo($params)
+    {
+        $dateRange = $this->getDashboardDateRange((array) $params);
+        $matomoData = $this->getDashboardMatomoData($dateRange);
+
+        $this->context->smarty->assign([
+            'mtm_dashboard_url' => $this->context->link->getAdminLink('AdminModules')
+                . '&configure=' . $this->name
+                . '&tab_module=' . $this->tab
+                . '&module_name=' . $this->name,
+            'mtm_is_connected' => $this->isMatomoApiConfigured(),
+            'mtm_api_error' => $matomoData['error'],
+            'mtm_site_metrics' => $matomoData['site_metrics'],
+            'mtm_channel_rows' => $matomoData['channel_rows'],
+            'mtm_period_label' => $dateRange['label'],
+            'mtm_period_from' => $dateRange['date_from'],
+            'mtm_period_to' => $dateRange['date_to'],
+        ]);
+
+        return $this->display(__FILE__, 'views/templates/admin/dashboard_widget.tpl');
+    }
+
+    public function isMatomoApiConfigured()
+    {
+        return (int) Configuration::get('TEC_MATOMO_SITEID') > 0
+            && trim((string) Configuration::get('TEC_MATOMO_URL')) !== ''
+            && trim((string) Configuration::get('TEC_MATOMO_TOKEN')) !== '';
+    }
+
+    public function getDashboardMatomoData($dateRange)
+    {
+        $siteMetrics = [
+            'revenue' => 0.0,
+            'revenue_formatted' => $this->formatDashboardAmount(0),
+            'orders' => 0,
+            'conversion_rate' => '0.00%',
+            'average_order_value' => $this->formatDashboardAmount(0),
+            'visits' => 0,
+            'unique_visitors' => 0,
+            'actions' => 0,
+            'bounce_rate' => '0%',
+        ];
+        $emptyExtraRows = [
+            'country_rows' => [],
+            'product_rows' => [],
+            'category_rows' => [],
+        ];
+
+        if (!$this->isMatomoApiConfigured()) {
+            return [
+                'site_metrics' => $siteMetrics,
+                'channel_rows' => [],
+                'country_rows' => $emptyExtraRows['country_rows'],
+                'product_rows' => $emptyExtraRows['product_rows'],
+                'category_rows' => $emptyExtraRows['category_rows'],
+                'error' => '',
+            ];
+        }
+
+        $visits = $this->callMatomoApi('VisitsSummary.get', $dateRange);
+        if (isset($visits['error'])) {
+            return [
+                'site_metrics' => $siteMetrics,
+                'channel_rows' => [],
+                'country_rows' => $emptyExtraRows['country_rows'],
+                'product_rows' => $emptyExtraRows['product_rows'],
+                'category_rows' => $emptyExtraRows['category_rows'],
+                'error' => (string) $visits['error'],
+            ];
+        }
+
+        $goals = $this->callMatomoApi('Goals.get', $dateRange, ['idGoal' => 'ecommerceOrder']);
+        if (isset($goals['error'])) {
+            $goals = [];
+        }
+
+        $channels = $this->callMatomoApi('Referrers.getReferrerType', $dateRange, [
+            'idGoal' => 'ecommerceOrder',
+            'filter_limit' => -1,
+        ]);
+        if (isset($channels['error']) || !is_array($channels)) {
+            $channels = [];
+        }
+
+        $countries = $this->callMatomoApi('UserCountry.getCountry', $dateRange, [
+            'idGoal' => 'ecommerceOrder',
+            'filter_limit' => -1,
+        ]);
+        if (isset($countries['error']) || !is_array($countries)) {
+            $countries = [];
+        }
+
+        $products = $this->callMatomoApi('Goals.getItemsName', $dateRange, [
+            'idGoal' => 'ecommerceOrder',
+            'filter_limit' => -1,
+        ]);
+        if (isset($products['error']) || !is_array($products)) {
+            $products = [];
+        }
+
+        $categories = $this->callMatomoApi('Goals.getItemsCategory', $dateRange, [
+            'idGoal' => 'ecommerceOrder',
+            'filter_limit' => -1,
+        ]);
+        if (isset($categories['error']) || !is_array($categories)) {
+            $categories = [];
+        }
+
+        $revenue = $this->firstNumericValue($goals, ['revenue', 'revenue_subtotal']);
+        $orders = (int) $this->firstNumericValue($goals, ['orders', 'nb_conversions', 'conversions']);
+        $conversionRate = $this->firstStringValue($goals, ['conversion_rate']);
+        if ($conversionRate === '') {
+            $conversionRate = $this->calculateRate((int) $orders, (int) $this->firstNumericValue($visits, ['nb_visits']));
+        }
+
+        $siteMetrics = [
+            'revenue' => $revenue,
+            'revenue_formatted' => $this->formatDashboardAmount($revenue),
+            'orders' => $orders,
+            'conversion_rate' => $conversionRate,
+            'average_order_value' => $orders > 0 ? $this->formatDashboardAmount($revenue / $orders) : $this->formatDashboardAmount(0),
+            'visits' => (int) $this->firstNumericValue($visits, ['nb_visits']),
+            'unique_visitors' => (int) $this->firstNumericValue($visits, ['nb_uniq_visitors', 'nb_users']),
+            'actions' => (int) $this->firstNumericValue($visits, ['nb_actions']),
+            'bounce_rate' => $this->firstStringValue($visits, ['bounce_rate']),
+        ];
+
+        if ($siteMetrics['bounce_rate'] === '') {
+            $siteMetrics['bounce_rate'] = '0%';
+        }
+
+        return [
+            'site_metrics' => $siteMetrics,
+            'channel_rows' => $this->normalizeDashboardChannelRows($channels),
+            'country_rows' => $this->normalizeTopRevenueRows($countries, 10),
+            'product_rows' => $this->normalizeTopRevenueRows($products, 10),
+            'category_rows' => $this->normalizeTopRevenueRows($categories, 10),
+            'error' => '',
+        ];
+    }
+
+    protected function getProductMatomoData($idProduct, $dateRange)
+    {
+        $aliases = $this->getProductMatomoAliases($idProduct);
+        $emptyMetrics = [
+            'orders' => 0,
+            'items_purchased' => 0,
+            'revenue' => 0.0,
+            'revenue_formatted' => $this->formatDashboardAmount(0),
+            'average_price' => $this->formatDashboardAmount(0),
+            'conversion_rate' => '0.00%',
+            'matched_rows' => 0,
+        ];
+
+        if (!$this->isMatomoApiConfigured()) {
+            return [
+                'metrics' => $emptyMetrics,
+                'rows' => [],
+                'aliases' => $aliases,
+                'error' => '',
+            ];
+        }
+
+        $items = $this->callMatomoApi('Goals.getItemsSku', $dateRange, [
+            'idGoal' => 'ecommerceOrder',
+            'filter_limit' => -1,
+        ]);
+        if (isset($items['error'])) {
+            return [
+                'metrics' => $emptyMetrics,
+                'rows' => [],
+                'aliases' => $aliases,
+                'error' => (string) $items['error'],
+            ];
+        }
+
+        if (!is_array($items)) {
+            $items = [];
+        }
+
+        return $this->buildProductMetricsFromRows($items, $aliases, $emptyMetrics);
+    }
+
+    protected function getProductMatomoAliases($idProduct)
+    {
+        $aliases = [(string) (int) $idProduct];
+        $rows = Db::getInstance()->executeS(
+            'SELECT `id_product_attribute`
+            FROM `' . _DB_PREFIX_ . 'product_attribute`
+            WHERE `id_product` = ' . (int) $idProduct
+        );
+
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                $idProductAttribute = isset($row['id_product_attribute']) ? (int) $row['id_product_attribute'] : 0;
+                if ($idProductAttribute > 0) {
+                    $aliases[] = (string) (int) $idProduct . 'v' . (int) $idProductAttribute;
+                }
+            }
+        }
+
+        return array_values(array_unique($aliases));
+    }
+
+    protected function buildProductMetricsFromRows($rows, $aliases, $emptyMetrics)
+    {
+        $aliasMap = array_fill_keys($aliases, true);
+        $matchedRows = [];
+        $orders = 0;
+        $itemsPurchased = 0;
+        $revenue = 0.0;
+        $weightedConversionRate = 0.0;
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $label = isset($row['label']) ? (string) $row['label'] : '';
+            if ($label === '' || !isset($aliasMap[$label])) {
+                continue;
+            }
+
+            $rowRevenue = $this->firstNumericValue($row, ['revenue', 'revenue_subtotal']);
+            $rowOrders = (int) $this->firstNumericValue($row, ['orders', 'nb_conversions', 'conversions']);
+            $rowQuantity = (int) $this->firstNumericValue($row, ['quantity', 'items', 'nb_items']);
+            $rowConversionRate = $this->normalizePercentValue($this->firstStringValue($row, ['conversion_rate']));
+
+            $orders += $rowOrders;
+            $itemsPurchased += $rowQuantity;
+            $revenue += $rowRevenue;
+            $weightedConversionRate += $rowConversionRate * max(1, $rowOrders);
+
+            $matchedRows[] = [
+                'sku' => $label,
+                'orders' => $rowOrders,
+                'items_purchased' => $rowQuantity,
+                'revenue' => $rowRevenue,
+                'revenue_formatted' => $this->formatDashboardAmount($rowRevenue),
+                'conversion_rate' => $rowConversionRate > 0 ? number_format($rowConversionRate, 2, '.', '') . '%' : $this->firstStringValue($row, ['conversion_rate']),
+            ];
+        }
+
+        if (!$matchedRows) {
+            return [
+                'metrics' => $emptyMetrics,
+                'rows' => [],
+                'aliases' => $aliases,
+                'error' => '',
+            ];
+        }
+
+        usort($matchedRows, function ($left, $right) {
+            if ($left['revenue'] === $right['revenue']) {
+                return 0;
+            }
+
+            return $left['revenue'] < $right['revenue'] ? 1 : -1;
+        });
+
+        $metrics = [
+            'orders' => $orders,
+            'items_purchased' => $itemsPurchased,
+            'revenue' => $revenue,
+            'revenue_formatted' => $this->formatDashboardAmount($revenue),
+            'average_price' => $itemsPurchased > 0 ? $this->formatDashboardAmount($revenue / $itemsPurchased) : $this->formatDashboardAmount(0),
+            'conversion_rate' => $orders > 0 ? number_format($weightedConversionRate / $orders, 2, '.', '') . '%' : '0.00%',
+            'matched_rows' => count($matchedRows),
+        ];
+
+        return [
+            'metrics' => $metrics,
+            'rows' => $matchedRows,
+            'aliases' => $aliases,
+            'error' => '',
+        ];
+    }
+
+    protected function callMatomoApi($method, $dateRange, $extraParams = [])
+    {
+        $baseUrl = rtrim((string) Configuration::get('TEC_MATOMO_URL'), '/') . '/';
+        $params = array_merge([
+            'module' => 'API',
+            'method' => $method,
+            'idSite' => (int) Configuration::get('TEC_MATOMO_SITEID'),
+            'period' => 'range',
+            'date' => $dateRange['date_from'] . ',' . $dateRange['date_to'],
+            'format' => 'JSON',
+            'token_auth' => (string) Configuration::get('TEC_MATOMO_TOKEN'),
+        ], $extraParams);
+        $url = $baseUrl . 'index.php?' . http_build_query($params, '', '&');
+        $response = Tools::file_get_contents($url);
+
+        if ($response === false || $response === '') {
+            return ['error' => $this->l('Matomo API did not return data.')];
+        }
+
+        $data = json_decode($response, true);
+        if (!is_array($data)) {
+            return ['error' => $this->l('Matomo API returned an invalid response.')];
+        }
+
+        if (isset($data['result']) && $data['result'] === 'error') {
+            return ['error' => isset($data['message']) ? (string) $data['message'] : $this->l('Matomo API returned an error.')];
+        }
+
+        return $data;
+    }
+
+    protected function normalizeDashboardChannelRows($rows)
+    {
+        return $this->normalizeTopRevenueRows($rows, 8);
+    }
+
+    protected function normalizeTopRevenueRows($rows, $limit)
+    {
+        $normalizedRows = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $label = isset($row['label']) ? (string) $row['label'] : '';
+            if ($label === '') {
+                continue;
+            }
+
+            $revenue = $this->firstRevenueValue($row);
+            $orders = $this->firstOrderValue($row);
+            $items = $this->firstItemsValue($row);
+
+            $normalizedRows[] = [
+                'label' => $label,
+                'visits' => (int) $this->firstNumericValue($row, ['nb_visits', 'visits']),
+                'orders' => $orders,
+                'items' => $items,
+                'revenue' => $revenue,
+                'revenue_formatted' => $this->formatDashboardAmount($revenue),
+            ];
+        }
+
+        usort($normalizedRows, function ($left, $right) {
+            if ($left['revenue'] === $right['revenue']) {
+                return 0;
+            }
+
+            return $left['revenue'] < $right['revenue'] ? 1 : -1;
+        });
+
+        return array_slice($normalizedRows, 0, (int) $limit);
+    }
+
+    protected function firstRevenueValue($row)
+    {
+        $revenue = $this->firstNumericValue($row, ['revenue', 'revenue_subtotal']);
+        if ($revenue > 0) {
+            return $revenue;
+        }
+
+        return $this->firstNumericValueBySuffix($row, '_revenue');
+    }
+
+    protected function firstOrderValue($row)
+    {
+        $orders = (int) $this->firstNumericValue($row, ['orders', 'nb_conversions', 'conversions']);
+        if ($orders > 0) {
+            return $orders;
+        }
+
+        return (int) $this->firstNumericValueBySuffix($row, '_nb_conversions');
+    }
+
+    protected function firstItemsValue($row)
+    {
+        $items = (int) $this->firstNumericValue($row, ['items', 'quantity', 'nb_items']);
+        if ($items > 0) {
+            return $items;
+        }
+
+        return (int) $this->firstNumericValueBySuffix($row, '_items');
+    }
+
+    protected function firstNumericValueBySuffix($row, $suffix)
+    {
+        if (!is_array($row)) {
+            return 0.0;
+        }
+
+        foreach ($row as $key => $value) {
+            if (!is_string($key) || substr($key, -strlen($suffix)) !== $suffix) {
+                continue;
+            }
+
+            $normalizedValue = is_string($value) ? str_replace(['%', ','], ['', '.'], $value) : $value;
+            if (is_numeric($normalizedValue)) {
+                return (float) $normalizedValue;
+            }
+        }
+
+        return 0.0;
+    }
+
+    protected function firstNumericValue($row, $keys)
+    {
+        foreach ($keys as $key) {
+            if (!isset($row[$key])) {
+                continue;
+            }
+
+            $value = is_string($row[$key]) ? str_replace(['%', ','], ['', '.'], $row[$key]) : $row[$key];
+            if (is_numeric($value)) {
+                return (float) $value;
+            }
+        }
+
+        return 0.0;
+    }
+
+    protected function firstStringValue($row, $keys)
+    {
+        foreach ($keys as $key) {
+            if (isset($row[$key]) && is_scalar($row[$key])) {
+                return (string) $row[$key];
+            }
+        }
+
+        return '';
+    }
+
+    protected function calculateRate($orders, $visits)
+    {
+        if ($visits <= 0) {
+            return '0.00%';
+        }
+
+        return number_format(($orders / $visits) * 100, 2, '.', '') . '%';
+    }
+
+    protected function normalizePercentValue($value)
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return 0.0;
+        }
+
+        $value = str_replace(['%', ','], ['', '.'], $value);
+
+        return is_numeric($value) ? (float) $value : 0.0;
+    }
+
+    protected function formatDashboardAmount($amount)
+    {
+        $currency = $this->context->currency;
+        $formattedAmount = number_format((float) $amount, 2, '.', '');
+
+        if (Validate::isLoadedObject($currency) && isset($currency->sign)) {
+            return $formattedAmount . ' ' . $currency->sign;
+        }
+
+        return $formattedAmount;
+    }
+
+    protected function ensureDashboardEmployeeDateRange()
+    {
+        if (!isset($this->context->employee) || !Validate::isLoadedObject($this->context->employee)) {
+            return;
+        }
+
+        $dateFrom = $this->normalizeDashboardDate((string) $this->context->employee->stats_date_from);
+        $dateTo = $this->normalizeDashboardDate((string) $this->context->employee->stats_date_to);
+        if ($dateFrom !== '' && $dateTo !== '' && $dateFrom <= $dateTo) {
+            return;
+        }
+
+        $this->context->employee->stats_date_from = date('Y-m-d', strtotime('-30 days'));
+        $this->context->employee->stats_date_to = date('Y-m-d');
+        $this->context->employee->update();
+    }
+
+    protected function sanitizeDashboardRequestDate($key, $fallbackDate)
+    {
+        $fallbackDate = $this->normalizeDashboardDate($fallbackDate);
+        if ($fallbackDate === '') {
+            $fallbackDate = date('Y-m-d');
+        }
+
+        foreach (['_GET', '_POST'] as $source) {
+            if (!isset($GLOBALS[$source][$key])) {
+                continue;
+            }
+
+            $value = $GLOBALS[$source][$key];
+            $normalizedDate = is_scalar($value) ? $this->normalizeDashboardDate((string) $value) : '';
+            $GLOBALS[$source][$key] = $normalizedDate !== '' ? $normalizedDate : $fallbackDate;
+        }
+    }
+
+    protected function getDashboardDateRange($params)
+    {
+        $dateFrom = $this->normalizeDashboardDate($this->getDashboardParamValue($params, 'date_from'));
+        $dateTo = $this->normalizeDashboardDate($this->getDashboardParamValue($params, 'date_to'));
+        if ($dateFrom === '' || $dateTo === '' || $dateFrom > $dateTo) {
+            $dateTo = date('Y-m-d', strtotime('-1 day'));
+            $dateFrom = date('Y-m-d', strtotime('-30 days'));
+
+            return [
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'period_days' => 30,
+                'label' => $this->l('Last 30 days'),
+                'has_selected_range' => false,
+            ];
+        }
+
+        $from = new DateTime($dateFrom);
+        $to = new DateTime($dateTo);
+        $periodDays = max(1, min(365, (int) $from->diff($to)->days + 1));
+
+        return [
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'period_days' => $periodDays,
+            'label' => $dateFrom . ' - ' . $dateTo,
+            'has_selected_range' => true,
+        ];
+    }
+
+    protected function normalizeDashboardDate($date)
+    {
+        $date = trim((string) $date);
+        if ($date === '') {
+            return '';
+        }
+
+        $formats = ['Y-m-d', 'Y/m/d', 'd/m/Y', 'm/d/Y'];
+        foreach ($formats as $format) {
+            $dateTime = DateTime::createFromFormat($format, $date);
+            if ($dateTime instanceof DateTime && $dateTime->format($format) === $date) {
+                return $dateTime->format('Y-m-d');
+            }
+        }
+
+        return '';
+    }
+
+    protected function getDashboardParamValue($params, $key)
+    {
+        if (isset($params[$key]) && is_scalar($params[$key])) {
+            return (string) $params[$key];
+        }
+
+        return (string) Tools::getValue($key);
     }
 
     /**
@@ -670,7 +1364,9 @@ class Tec_matomo extends Module
         $hbEnable   = (int)Configuration::get('TEC_MATOMO_HEARTBEAT_ENABLE');
         $hbSeconds  = (int)Configuration::get('TEC_MATOMO_HEARTBEAT_SEC');
 
-        $lgEnable = (int) Configuration::get('TEC_MATOMO_LG_ENABLE');
+        $consentManager = $this->getConsentManagerMode();
+        $lgEnable = $consentManager === 'lg' ? 1 : 0;
+        $artCookieEnable = $consentManager === 'artcookie' ? 1 : 0;
 
         // userid dal cliente loggato
         $idCustomer = null;
@@ -747,6 +1443,7 @@ class Tec_matomo extends Module
             'matomo_privacy_mode' => $privacyMode,     // none|cookieless|consent
             'matomo_securecookie' => $secureCookie,    // 0|1
             'matomo_lg_enable'   => $lgEnable,        // 0|1
+            'matomo_artcookie_enable' => $artCookieEnable,
 
             // sub/cross domain
             'matomo_subdomains'        => $useSubdomains,

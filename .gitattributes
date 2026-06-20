@@ -26,5 +26,5 @@
 /phpunit.xml.dist export-ignore
 /build.sh export-ignore
 /Makefile export-ignore
-/config.xml export-ignore
-/config_it.xml  export-ignore
+config*.xml export-ignore
+/dist/ export-ignore
