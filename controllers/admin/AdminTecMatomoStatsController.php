@@ -102,7 +102,12 @@ class AdminTecMatomoStatsController extends ModuleAdminController
             return $this->module;
         }
 
-        return Module::getInstanceByName('tec_matomo');
+        $module = Module::getInstanceByName('tec_matomo');
+        if ($module instanceof Tec_matomo) {
+            return $module;
+        }
+
+        return new Tec_matomo();
     }
 
     protected function getDateRange()
