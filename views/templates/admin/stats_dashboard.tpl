@@ -125,6 +125,20 @@
     </div>
 
     <div class="panel tec-matomo-stats-page">
+      <div class="panel-heading">{l s='AI Assistant traffic' mod='tec_matomo'}</div>
+      {if $mtm_stats_ai_assistant_metrics.available}
+        <div class="row tec-matomo-stats-kpis">
+          <div class="col-md-3"><strong>{l s='Channel' mod='tec_matomo'}</strong><span>{$mtm_stats_ai_assistant_metrics.label|escape:'html':'UTF-8'}</span></div>
+          <div class="col-md-3"><strong>{l s='Visits' mod='tec_matomo'}</strong><span>{$mtm_stats_ai_assistant_metrics.visits|default:0|intval}</span></div>
+          <div class="col-md-3"><strong>{l s='Orders' mod='tec_matomo'}</strong><span>{$mtm_stats_ai_assistant_metrics.orders|default:0|intval}</span></div>
+          <div class="col-md-3"><strong>{l s='Revenue' mod='tec_matomo'}</strong><span>{$mtm_stats_ai_assistant_metrics.revenue_formatted|default:'0.00'|escape:'html':'UTF-8'}</span></div>
+        </div>
+      {else}
+        <p class="text-muted">{l s='No AI Assistant traffic is available for the selected period.' mod='tec_matomo'}</p>
+      {/if}
+    </div>
+
+    <div class="panel tec-matomo-stats-page">
       <div class="panel-heading">{l s='Top countries by revenue' mod='tec_matomo'}</div>
       {if $mtm_stats_country_rows|count}
         <div class="table-responsive">

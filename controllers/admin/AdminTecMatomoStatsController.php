@@ -37,21 +37,23 @@ class AdminTecMatomoStatsController extends ModuleAdminController
     {
         parent::initContent();
 
+        $matomoModule = $this->getMatomoModule();
         $dateRange = $this->getDateRange();
-        $matomoData = $this->module->getDashboardMatomoData($dateRange);
+        $matomoData = $matomoModule->getDashboardMatomoData($dateRange);
 
-        $this->context->controller->addCSS($this->module->getPathUri() . 'views/css/admin.css');
+        $this->context->controller->addCSS($matomoModule->getPathUri() . 'views/css/admin.css');
         $this->context->smarty->assign([
             'mtm_stats_form_action' => $this->context->link->getAdminLink('AdminTecMatomoStats'),
             'mtm_stats_token' => Tools::getAdminTokenLite('AdminTecMatomoStats'),
             'mtm_stats_config_url' => $this->context->link->getAdminLink('AdminModules')
-                . '&configure=' . $this->module->name
-                . '&tab_module=' . $this->module->tab
-                . '&module_name=' . $this->module->name,
-            'mtm_stats_is_connected' => $this->module->isMatomoApiConfigured(),
+                . '&configure=' . $matomoModule->name
+                . '&tab_module=' . $matomoModule->tab
+                . '&module_name=' . $matomoModule->name,
+            'mtm_stats_is_connected' => $matomoModule->isMatomoApiConfigured(),
             'mtm_stats_api_error' => $matomoData['error'],
             'mtm_stats_site_metrics' => $matomoData['site_metrics'],
             'mtm_stats_channel_rows' => $matomoData['channel_rows'],
+            'mtm_stats_ai_assistant_metrics' => $this->getAiAssistantMetrics($matomoData['channel_rows']),
             'mtm_stats_country_rows' => $matomoData['country_rows'],
             'mtm_stats_product_rows' => $matomoData['product_rows'],
             'mtm_stats_category_rows' => $matomoData['category_rows'],
@@ -70,15 +72,16 @@ class AdminTecMatomoStatsController extends ModuleAdminController
 
     protected function exportData()
     {
+        $matomoModule = $this->getMatomoModule();
         $format = $this->normalizeExportFormat((string) Tools::getValue('export_format', 'csv'));
         if ($format === '') {
-            $this->errors[] = $this->l('Invalid export request.');
+            $this->errors[] = $matomoModule->l('Invalid export request.');
 
             return;
         }
 
         $dateRange = $this->getDateRange();
-        $matomoData = $this->module->getDashboardMatomoData($dateRange);
+        $matomoData = $matomoModule->getDashboardMatomoData($dateRange);
         $rows = $this->buildExportRows($matomoData);
         $content = $this->renderExport($rows, $format, $dateRange);
 
@@ -88,6 +91,18 @@ class AdminTecMatomoStatsController extends ModuleAdminController
         header('Expires: 0');
         echo $content;
         exit;
+    }
+
+    /**
+     * @return Tec_matomo
+     */
+    protected function getMatomoModule()
+    {
+        if ($this->module instanceof Tec_matomo) {
+            return $this->module;
+        }
+
+        return Module::getInstanceByName('tec_matomo');
     }
 
     protected function getDateRange()
@@ -200,6 +215,45 @@ class AdminTecMatomoStatsController extends ModuleAdminController
         }
 
         return $rows;
+    }
+
+    protected function getAiAssistantMetrics($channelRows)
+    {
+        $emptyMetrics = [
+            'available' => false,
+            'label' => 'AI Assistant',
+            'visits' => 0,
+            'orders' => 0,
+            'revenue' => 0.0,
+            'revenue_formatted' => '0.00',
+        ];
+
+        if (!is_array($channelRows)) {
+            return $emptyMetrics;
+        }
+
+        foreach ($channelRows as $row) {
+            if (!is_array($row) || !isset($row['label'])) {
+                continue;
+            }
+
+            $label = (string) $row['label'];
+            $normalizedLabel = strtolower($label);
+            if (strpos($normalizedLabel, 'ai assistant') === false) {
+                continue;
+            }
+
+            return [
+                'available' => true,
+                'label' => $label,
+                'visits' => isset($row['visits']) ? (int) $row['visits'] : 0,
+                'orders' => isset($row['orders']) ? (int) $row['orders'] : 0,
+                'revenue' => isset($row['revenue']) ? (float) $row['revenue'] : 0.0,
+                'revenue_formatted' => isset($row['revenue_formatted']) ? (string) $row['revenue_formatted'] : '0.00',
+            ];
+        }
+
+        return $emptyMetrics;
     }
 
     protected function renderExport($rows, $format, $dateRange)

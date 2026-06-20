@@ -47,6 +47,10 @@ The Matomo API token enables a dedicated statistics page in the PrestaShop back 
 
 The statistics page supports manual date ranges, quick presets for month, year, day -1, month -1, and year -1, plus CSV, JSON, and XML export for the currently selected dataset.
 
+Matomo 5.5+ can classify referral traffic from AI tools such as ChatGPT, Claude, Gemini, Copilot, and Perplexity under the **AI Assistant** channel. When that channel is available in Matomo API data, the dedicated statistics page shows a separate AI Assistant traffic block.
+
+Matomo 5.8+ also supports AI Chatbot tracking through server-side integrations such as Cloudflare, Amazon CloudFront, WordPress, or the Matomo HTTP Tracking API. This module does not configure server-side chatbot tracking automatically; use Matomo setup instructions when that report is required.
+
 ## Development
 
 - Follows **Semantic Versioning**.

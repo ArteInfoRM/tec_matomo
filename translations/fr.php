@@ -137,6 +137,8 @@ $_MODULE['<{tec_matomo}prestashop>stats_dashboard_1f75ef629fae2f03be5aecbcb45b11
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_95b4c78cf3a9e34387a66a9425906ba5'] = 'Revenus par canal';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_781dc97dc62331eec3ea9ec4373a3ca8'] = 'Canal';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_972af3fd7f956078a64f76e8e43f2fad'] = 'Aucune donnee de revenus par canal n\'est disponible pour la periode selectionnee.';
+$_MODULE['<{tec_matomo}prestashop>stats_dashboard_ce4aaee4a87918f1b10d082d041c5c45'] = 'Trafic AI Assistant';
+$_MODULE['<{tec_matomo}prestashop>stats_dashboard_1b71d3bda05aaef05d8a1173aa4326eb'] = 'Aucune donnee de trafic AI Assistant n\'est disponible pour la periode selectionnee.';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_55382cc80c729f302917e64017ff4089'] = 'Principaux pays par revenus';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_59716c97497eb9694541f7c3d37b1a4d'] = 'Pays';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_300aa8ed0f2cd719803506f00a564738'] = 'Aucune donnee de revenus par pays n\'est disponible pour la periode selectionnee.';

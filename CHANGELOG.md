@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.1.6] - 2026-06-20
 ### Added
+- AI Assistant traffic block in the dedicated statistics controller when Matomo exposes the AI Assistant referrer channel.
+- README notes for Matomo AI Assistant channel and AI Chatbot server-side tracking setup.
 - Dedicated Matomo Analytics admin controller with menu entry and custom date range selector.
 - Spanish, German, and French translations.
 - Top 10 countries, products, and categories by revenue in the dedicated statistics controller.
@@ -15,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Optional Art Cookie Choices Pro integration for Matomo cookie consent.
 
 ### Changed
+- Replaced deprecated tab lookup calls and improved module method resolution in the admin statistics controller.
 - Dashboard and statistics channel revenue now use Matomo referrer types instead of detailed referrer rows.
 - The dedicated statistics controller calendar now includes quick period presets for month, year, day -1, month -1, and year -1.
 - Removed the legacy Matomo ImageGraph preview from the module configuration page.

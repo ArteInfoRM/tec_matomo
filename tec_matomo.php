@@ -115,7 +115,7 @@ class Tec_matomo extends Module
 
     public function installStatsTab()
     {
-        $idTab = (int) Tab::getIdFromClassName('AdminTecMatomoStats');
+        $idTab = $this->getTabIdByClassName('AdminTecMatomoStats');
         if ($idTab > 0) {
             return true;
         }
@@ -136,7 +136,7 @@ class Tec_matomo extends Module
 
     public function uninstallStatsTab()
     {
-        $idTab = (int) Tab::getIdFromClassName('AdminTecMatomoStats');
+        $idTab = $this->getTabIdByClassName('AdminTecMatomoStats');
         if ($idTab <= 0) {
             return true;
         }
@@ -146,12 +146,26 @@ class Tec_matomo extends Module
 
     protected function getStatsSiblingParentId()
     {
-        $idStats = (int) Tab::getIdFromClassName('AdminStats');
+        $idStats = $this->getTabIdByClassName('AdminStats');
         if ($idStats <= 0) {
             return 0;
         }
 
         return (int) (new Tab($idStats))->id_parent;
+    }
+
+    protected function getTabIdByClassName($className)
+    {
+        $className = trim((string) $className);
+        if ($className === '') {
+            return 0;
+        }
+
+        return (int) Db::getInstance()->getValue(
+            'SELECT `id_tab`
+            FROM `' . _DB_PREFIX_ . 'tab`
+            WHERE `class_name` = "' . pSQL($className) . '"'
+        );
     }
 
     /**

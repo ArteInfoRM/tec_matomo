@@ -137,6 +137,8 @@ $_MODULE['<{tec_matomo}prestashop>stats_dashboard_1f75ef629fae2f03be5aecbcb45b11
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_95b4c78cf3a9e34387a66a9425906ba5'] = 'Umsatz nach Kanal';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_781dc97dc62331eec3ea9ec4373a3ca8'] = 'Kanal';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_972af3fd7f956078a64f76e8e43f2fad'] = 'Fuer den ausgewaehlten Zeitraum sind keine Umsatzdaten nach Kanal verfuegbar.';
+$_MODULE['<{tec_matomo}prestashop>stats_dashboard_ce4aaee4a87918f1b10d082d041c5c45'] = 'AI Assistant-Traffic';
+$_MODULE['<{tec_matomo}prestashop>stats_dashboard_1b71d3bda05aaef05d8a1173aa4326eb'] = 'Fuer den ausgewaehlten Zeitraum sind keine AI Assistant-Trafficdaten verfuegbar.';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_55382cc80c729f302917e64017ff4089'] = 'Top-Laender nach Umsatz';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_59716c97497eb9694541f7c3d37b1a4d'] = 'Land';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_300aa8ed0f2cd719803506f00a564738'] = 'Fuer den ausgewaehlten Zeitraum sind keine Umsatzdaten nach Land verfuegbar.';
