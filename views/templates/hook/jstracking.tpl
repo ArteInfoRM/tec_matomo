@@ -18,7 +18,7 @@
     {/literal}
 
     {* ===== PRIVACY ===== *}
-    {if $matomo_lg_enable == 1 || $matomo_artcookie_enable == 1}
+    {if $matomo_lg_enable == 1 || $matomo_artcookie_enable == 1 || $matomo_iubenda_enable == 1 || $matomo_cookiebot_enable == 1 || $matomo_cookieyes_enable == 1}
     // Consent manager integration: We always start with requireCookieConsent
     _paq.push(['requireCookieConsent']);
     {else}
@@ -127,4 +127,3 @@
     </noscript>
 {/if}
 <!-- End Matomo PrestaShop Module by https://www.tecnoacquisti.com -->
-

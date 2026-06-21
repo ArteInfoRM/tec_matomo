@@ -7,7 +7,7 @@
  *  @author    Tecnoacquisti.com <shop@tecnoacquisti.com>
  *  @copyright 2009-2026 Tecnoacquisti.com
  *  @license   One Paid Licence By WebSite Using This Module. No Rent. No Sell. No Share.
- *  @version   1.1.6
+ *  @version   1.1.7
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -22,7 +22,7 @@ class Tec_matomo extends Module
     {
         $this->name = 'tec_matomo';
         $this->tab = 'analytics_stats';
-        $this->version = '1.1.6';
+        $this->version = '1.1.7';
         $this->author = 'Tecnoacquisti.com';
         $this->need_instance = 0;
 
@@ -70,6 +70,7 @@ class Tec_matomo extends Module
         Configuration::updateValue('TEC_MATOMO_LG_ENABLE', false);
         Configuration::updateValue('TEC_MATOMO_LG_PURPOSE', 3); // default purpose ID for Analytics in LG Cookies Law
         Configuration::updateValue('TEC_MATOMO_ARTCOOKIE_ENABLE', false);
+        Configuration::updateValue('TEC_MATOMO_IUBENDA_PURPOSE', 4);
 
         return parent::install() &&
             $this->installStatsTab() &&
@@ -109,6 +110,7 @@ class Tec_matomo extends Module
         Configuration::deleteByName('TEC_MATOMO_LG_ENABLE');
         Configuration::deleteByName('TEC_MATOMO_LG_PURPOSE');
         Configuration::deleteByName('TEC_MATOMO_ARTCOOKIE_ENABLE');
+        Configuration::deleteByName('TEC_MATOMO_IUBENDA_PURPOSE');
 
         return $this->uninstallStatsTab() && parent::uninstall();
     }
@@ -335,6 +337,18 @@ class Tec_matomo extends Module
                                     'id' => 'artcookie',
                                     'name' => $this->l('Art Cookie Choices Pro')
                                 ],
+                                [
+                                    'id' => 'iubenda',
+                                    'name' => $this->l('iubenda Cookie Solution')
+                                ],
+                                [
+                                    'id' => 'cookiebot',
+                                    'name' => $this->l('Cookiebot')
+                                ],
+                                [
+                                    'id' => 'cookieyes',
+                                    'name' => $this->l('CookieYes')
+                                ],
                             ],
                             'id' => 'id',
                             'name' => 'name',
@@ -347,6 +361,14 @@ class Tec_matomo extends Module
                         'class' => 'fixed-width-xs',
                         'form_group_class' => 'tec-matomo-lg-purpose-row',
                         'desc' => $this->l('Numeric ID of the LG purpose for Analytics (default is 3, corresponding to lgcookieslaw_purpose_3).'),
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('iubenda Analytics purpose ID'),
+                        'name' => 'TEC_MATOMO_IUBENDA_PURPOSE',
+                        'class' => 'fixed-width-xs',
+                        'form_group_class' => 'tec-matomo-iubenda-purpose-row',
+                        'desc' => $this->l('Numeric ID of the iubenda purpose used for Analytics consent. Default is 4.'),
                     ],
                     array(
                         'type' => 'switch',
@@ -487,6 +509,7 @@ class Tec_matomo extends Module
             // LEGAL/GDPR
             'TEC_MATOMO_CONSENT_MANAGER' => Tools::getValue('TEC_MATOMO_CONSENT_MANAGER', $this->getConsentManagerMode()),
             'TEC_MATOMO_LG_PURPOSE' => (int) Tools::getValue('TEC_MATOMO_LG_PURPOSE', (int)Configuration::get('TEC_MATOMO_LG_PURPOSE')),
+            'TEC_MATOMO_IUBENDA_PURPOSE' => (int) Tools::getValue('TEC_MATOMO_IUBENDA_PURPOSE', (int)Configuration::get('TEC_MATOMO_IUBENDA_PURPOSE')),
         );
     }
 
@@ -494,7 +517,7 @@ class Tec_matomo extends Module
     {
         $manager = (string) Configuration::get('TEC_MATOMO_CONSENT_MANAGER');
 
-        if (in_array($manager, ['disabled', 'lg', 'artcookie'], true)) {
+        if (in_array($manager, ['disabled', 'lg', 'artcookie', 'iubenda', 'cookiebot', 'cookieyes'], true)) {
             return $manager;
         }
 
@@ -522,7 +545,7 @@ class Tec_matomo extends Module
 
         // Enum privacy consentiti
         $allowedPrivacy = array('none', 'cookieless', 'consent');
-        $allowedConsentManagers = ['disabled', 'lg', 'artcookie'];
+        $allowedConsentManagers = ['disabled', 'lg', 'artcookie', 'iubenda', 'cookiebot', 'cookieyes'];
 
         foreach (array_keys($form_values) as $key) {
 
@@ -675,6 +698,12 @@ class Tec_matomo extends Module
                     Configuration::updateValue($key, $p);
                     break;
 
+                case 'TEC_MATOMO_IUBENDA_PURPOSE':
+                    $p = (int) Tools::getValue($key);
+                    if ($p <= 0) { $p = 4; }
+                    Configuration::updateValue($key, $p);
+                    break;
+
                 // generic fallback (for future fields)
                 default:
                     Configuration::updateValue($key, Tools::getValue($key));
@@ -730,6 +759,47 @@ class Tec_matomo extends Module
                 [
                     'position' => 'head',
                     'priority' => 41,
+                    'attributes' => 'defer',
+                ]
+            );
+        }
+
+        if ($consentManager === 'iubenda') {
+            $purpose = (int) Configuration::get('TEC_MATOMO_IUBENDA_PURPOSE');
+            if ($purpose <= 0) { $purpose = 4; }
+
+            Media::addJsDef(['matomoIubendaPurpose' => $purpose]);
+
+            $this->context->controller->registerJavascript(
+                'module-' . $this->name . '-iubenda-bridge',
+                $this->_path . 'views/js/matomo-iubenda-bridge.js',
+                [
+                    'position' => 'head',
+                    'priority' => 42,
+                    'attributes' => 'defer',
+                ]
+            );
+        }
+
+        if ($consentManager === 'cookiebot') {
+            $this->context->controller->registerJavascript(
+                'module-' . $this->name . '-cookiebot-bridge',
+                $this->_path . 'views/js/matomo-cookiebot-bridge.js',
+                [
+                    'position' => 'head',
+                    'priority' => 43,
+                    'attributes' => 'defer',
+                ]
+            );
+        }
+
+        if ($consentManager === 'cookieyes') {
+            $this->context->controller->registerJavascript(
+                'module-' . $this->name . '-cookieyes-bridge',
+                $this->_path . 'views/js/matomo-cookieyes-bridge.js',
+                [
+                    'position' => 'head',
+                    'priority' => 44,
                     'attributes' => 'defer',
                 ]
             );
@@ -1381,6 +1451,9 @@ class Tec_matomo extends Module
         $consentManager = $this->getConsentManagerMode();
         $lgEnable = $consentManager === 'lg' ? 1 : 0;
         $artCookieEnable = $consentManager === 'artcookie' ? 1 : 0;
+        $iubendaEnable = $consentManager === 'iubenda' ? 1 : 0;
+        $cookiebotEnable = $consentManager === 'cookiebot' ? 1 : 0;
+        $cookieyesEnable = $consentManager === 'cookieyes' ? 1 : 0;
 
         // userid dal cliente loggato
         $idCustomer = null;
@@ -1458,6 +1531,9 @@ class Tec_matomo extends Module
             'matomo_securecookie' => $secureCookie,    // 0|1
             'matomo_lg_enable'   => $lgEnable,        // 0|1
             'matomo_artcookie_enable' => $artCookieEnable,
+            'matomo_iubenda_enable' => $iubendaEnable,
+            'matomo_cookiebot_enable' => $cookiebotEnable,
+            'matomo_cookieyes_enable' => $cookieyesEnable,
 
             // sub/cross domain
             'matomo_subdomains'        => $useSubdomains,

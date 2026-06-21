@@ -31,8 +31,13 @@ $_MODULE['<{tec_matomo}prestashop>tec_matomo_5be00edb599eaa651f7bf6f45a2490da'] 
 $_MODULE['<{tec_matomo}prestashop>tec_matomo_97dd16b2d8f14572c31d918cc84038b3'] = 'Selectionnez quelle banniere de consentement doit controler le consentement aux cookies Matomo.';
 $_MODULE['<{tec_matomo}prestashop>tec_matomo_4e4aced860aa539a4a0437ea7f63818d'] = 'LG Cookies Law (Linea Grafica)';
 $_MODULE['<{tec_matomo}prestashop>tec_matomo_2b696c11a553c385e92fe63393377a13'] = 'Art Cookie Choices Pro';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_a0522b75d260447d0f827d2a0459e2b6'] = 'iubenda Cookie Solution';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_d4f6a73d035f4ca0870e1fc2b42ab7c8'] = 'Cookiebot';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_56f97b3d532515d92a767c9fbdf3d965'] = 'CookieYes';
 $_MODULE['<{tec_matomo}prestashop>tec_matomo_b1ee4597b4427becae1a10fc9cfed4a2'] = 'LG Cookies Law - ID de la finalite';
 $_MODULE['<{tec_matomo}prestashop>tec_matomo_419ca6c5585b6ceeb2e194b2d6b77696'] = 'Saisissez l\'ID numerique de la finalite Analytics du module LG Cookies Law (par defaut : 3, correspond a lgcookieslaw_purpose_3).';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_c066efc5ea0ec41d942e9f121b3490a5'] = 'ID de finalite Analytics iubenda';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_7ec34f682fecb7be4cf1a2ed87e06803'] = 'ID numerique de la finalite iubenda utilisee pour le consentement Analytics. La valeur par defaut est 4.';
 $_MODULE['<{tec_matomo}prestashop>tec_matomo_f849cee0356e3abbd5d8dbbe524c2eb1'] = 'Activer l\'integration Art Cookie Choices Pro';
 $_MODULE['<{tec_matomo}prestashop>tec_matomo_70e22be234af381a2d73fb608a6e3a06'] = 'Si elle est activee, le consentement aux cookies Matomo suit les categories analytics et performance de Art Cookie Choices Pro.';
 $_MODULE['<{tec_matomo}prestashop>tec_matomo_75c91ced62b91fab1af77d227bfed824'] = 'Cookie securise (HTTPS uniquement)';

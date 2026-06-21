@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.7] - 2026-06-21
+### Added
+- Consent manager integrations for iubenda, Cookiebot, and CookieYes.
+- Configurable iubenda Analytics purpose ID for Matomo cookie consent.
+- Dutch, Portuguese, Polish, and Romanian translations.
+- README notes about LegalBlink evaluation and the requirement for a stable JavaScript consent API or native script blocking.
+
 ## [1.1.6] - 2026-06-20
 ### Added
 - AI Assistant traffic block in the dedicated statistics controller when Matomo exposes the AI Assistant referrer channel.

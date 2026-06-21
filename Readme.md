@@ -19,7 +19,7 @@ This module allows merchants to replace Google Analytics with Matomo, keeping **
   - Cookieless (disableCookies)
   - Require cookie consent
 - Consent manager integration:
-  - Supports **LG Cookies Law (Línea Gráfica)** and **Art Cookie Choices Pro**.
+  - Supports **LG Cookies Law (Línea Gráfica)**, **Art Cookie Choices Pro**, **iubenda**, **Cookiebot**, and **CookieYes**.
   - Matomo cookie consent can follow the selected consent manager from module configuration.
 - Support for **noscript tracking pixel** (users with JavaScript disabled).
 - **Heartbeat timer** to improve accuracy of "time on page".
@@ -50,6 +50,20 @@ The statistics page supports manual date ranges, quick presets for month, year, 
 Matomo 5.5+ can classify referral traffic from AI tools such as ChatGPT, Claude, Gemini, Copilot, and Perplexity under the **AI Assistant** channel. When that channel is available in Matomo API data, the dedicated statistics page shows a separate AI Assistant traffic block.
 
 Matomo 5.8+ also supports AI Chatbot tracking through server-side integrations such as Cloudflare, Amazon CloudFront, WordPress, or the Matomo HTTP Tracking API. This module does not configure server-side chatbot tracking automatically; use Matomo setup instructions when that report is required.
+
+## Cookie consent integrations
+
+Matomo does not use Google Consent Mode. When Matomo cookies require consent, this module can call Matomo's cookie consent API after the selected cookie banner grants analytics/statistics consent.
+
+Supported integrations:
+
+- **LG Cookies Law (Línea Gráfica)**: uses the configured LG Analytics purpose ID.
+- **Art Cookie Choices Pro**: reads the analytics/performance consent preferences exposed by the banner cookies.
+- **iubenda**: reads `_iub.cs.api.getPreferences()` and the configured Analytics purpose ID. The default purpose ID is `4`, but it can be changed in the module configuration.
+- **Cookiebot**: reads `Cookiebot.consent.statistics` and listens to Cookiebot consent events.
+- **CookieYes**: reads `getCkyConsent()` and the Analytics category exposed by the CookieYes banner.
+
+LegalBlink was evaluated. Public documentation describes banner installation, script blocking, Google Consent Mode v2, and statistical cookie configuration, but no stable public JavaScript callback/preference API was found for a direct Matomo bridge. Use LegalBlink native script blocking for Matomo or provide the official callback/API details before enabling a dedicated module integration.
 
 ## Development
 

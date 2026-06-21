@@ -34,12 +34,20 @@
     var managerSelect = document.querySelector('[name="TEC_MATOMO_CONSENT_MANAGER"]');
     var purposeInput = document.querySelector('[name="TEC_MATOMO_LG_PURPOSE"]');
     var purposeRow = document.querySelector('.tec-matomo-lg-purpose-row') || getFormGroup(purposeInput);
+    var iubendaPurposeInput = document.querySelector('[name="TEC_MATOMO_IUBENDA_PURPOSE"]');
+    var iubendaPurposeRow = document.querySelector('.tec-matomo-iubenda-purpose-row') || getFormGroup(iubendaPurposeInput);
 
-    if (!managerSelect || !purposeRow) {
+    if (!managerSelect) {
       return;
     }
 
-    purposeRow.style.display = managerSelect.value === 'lg' ? '' : 'none';
+    if (purposeRow) {
+      purposeRow.style.display = managerSelect.value === 'lg' ? '' : 'none';
+    }
+
+    if (iubendaPurposeRow) {
+      iubendaPurposeRow.style.display = managerSelect.value === 'iubenda' ? '' : 'none';
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
