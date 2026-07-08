@@ -7,7 +7,7 @@
  *  @author    Tecnoacquisti.com <shop@tecnoacquisti.com>
  *  @copyright 2009-2026 Tecnoacquisti.com
  *  @license   One Paid Licence By WebSite Using This Module. No Rent. No Sell. No Share.
- *  @version   1.1.7
+ *  @version   1.1.8
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -22,7 +22,7 @@ class Tec_matomo extends Module
     {
         $this->name = 'tec_matomo';
         $this->tab = 'analytics_stats';
-        $this->version = '1.1.7';
+        $this->version = '1.1.8';
         $this->author = 'Tecnoacquisti.com';
         $this->need_instance = 0;
 
@@ -833,12 +833,26 @@ class Tec_matomo extends Module
             'label' => $this->l('Last 30 days'),
         ];
         $productData = $this->getProductMatomoData($idProduct, $dateRange);
+        if ($productData['rows'] === []) {
+            $yearDateTo = date('Y-m-d', strtotime('-1 day'));
+            $yearDateRange = [
+                'date_from' => date('Y-01-01', strtotime($yearDateTo)),
+                'date_to' => $yearDateTo,
+                'label' => date('Y-01-01', strtotime($yearDateTo)) . ' - ' . $yearDateTo,
+            ];
+            $yearProductData = $this->getProductMatomoData($idProduct, $yearDateRange);
+            if ($yearProductData['rows'] !== []) {
+                $dateRange = $yearDateRange;
+                $productData = $yearProductData;
+            }
+        }
 
         $this->context->smarty->assign([
             'mtm_product_is_connected' => $this->isMatomoApiConfigured(),
             'mtm_product_api_error' => $productData['error'],
             'mtm_product_metrics' => $productData['metrics'],
             'mtm_product_rows' => $productData['rows'],
+            'mtm_product_referrer_rows' => isset($productData['referrer_rows']) ? $productData['referrer_rows'] : [],
             'mtm_product_aliases' => $productData['aliases'],
             'mtm_product_period_label' => $dateRange['label'],
         ]);
@@ -1003,7 +1017,12 @@ class Tec_matomo extends Module
     protected function getProductMatomoData($idProduct, $dateRange)
     {
         $aliases = $this->getProductMatomoAliases($idProduct);
+        $nameAliases = $this->getProductMatomoNameAliases($idProduct);
+        $aggregateSkuAliases = !$this->productHasCombinations($idProduct);
         $emptyMetrics = [
+            'visits' => 0,
+            'actions' => 0,
+            'unique_visitors' => 0,
             'orders' => 0,
             'items_purchased' => 0,
             'revenue' => 0.0,
@@ -1017,6 +1036,7 @@ class Tec_matomo extends Module
             return [
                 'metrics' => $emptyMetrics,
                 'rows' => [],
+                'referrer_rows' => [],
                 'aliases' => $aliases,
                 'error' => '',
             ];
@@ -1030,6 +1050,7 @@ class Tec_matomo extends Module
             return [
                 'metrics' => $emptyMetrics,
                 'rows' => [],
+                'referrer_rows' => [],
                 'aliases' => $aliases,
                 'error' => (string) $items['error'],
             ];
@@ -1039,12 +1060,35 @@ class Tec_matomo extends Module
             $items = [];
         }
 
-        return $this->buildProductMetricsFromRows($items, $aliases, $emptyMetrics);
+        $productData = $this->buildProductMetricsFromRows($items, $aliases, $emptyMetrics, 'sku', $aggregateSkuAliases);
+        if ($productData['rows'] !== [] || $nameAliases === []) {
+            return $this->addProductReferrerRows($productData, $idProduct, $dateRange);
+        }
+
+        $itemsByName = $this->callMatomoApi('Goals.getItemsName', $dateRange, [
+            'idGoal' => 'ecommerceOrder',
+            'filter_limit' => -1,
+        ]);
+        if (isset($itemsByName['error'])) {
+            return $this->addProductReferrerRows($productData, $idProduct, $dateRange);
+        }
+
+        if (!is_array($itemsByName)) {
+            $itemsByName = [];
+        }
+
+        $productDataByName = $this->buildProductMetricsFromRows($itemsByName, $nameAliases, $emptyMetrics, 'name', false);
+        $productDataByName['aliases'] = $aliases;
+
+        return $this->addProductReferrerRows($productDataByName, $idProduct, $dateRange);
     }
 
     protected function getProductMatomoAliases($idProduct)
     {
-        $aliases = [(string) (int) $idProduct];
+        $aliases = [
+            (string) (int) $idProduct,
+            (string) (int) $idProduct . 'v0',
+        ];
         $rows = Db::getInstance()->executeS(
             'SELECT `id_product_attribute`
             FROM `' . _DB_PREFIX_ . 'product_attribute`
@@ -1063,13 +1107,55 @@ class Tec_matomo extends Module
         return array_values(array_unique($aliases));
     }
 
-    protected function buildProductMetricsFromRows($rows, $aliases, $emptyMetrics)
+    protected function productHasCombinations($idProduct)
     {
-        $aliasMap = array_fill_keys($aliases, true);
+        return (int) Db::getInstance()->getValue(
+            'SELECT COUNT(*)
+            FROM `' . _DB_PREFIX_ . 'product_attribute`
+            WHERE `id_product` = ' . (int) $idProduct
+        ) > 0;
+    }
+
+    protected function getProductMatomoNameAliases($idProduct)
+    {
+        $aliases = [];
+        $rows = Db::getInstance()->executeS(
+            'SELECT `name`
+            FROM `' . _DB_PREFIX_ . 'product_lang`
+            WHERE `id_product` = ' . (int) $idProduct
+        );
+
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                $name = isset($row['name']) ? trim((string) $row['name']) : '';
+                if ($name !== '') {
+                    $aliases[] = $name;
+                }
+            }
+        }
+
+        return array_values(array_unique($aliases));
+    }
+
+    protected function buildProductMetricsFromRows($rows, $aliases, $emptyMetrics, $labelType, $aggregateAliases)
+    {
+        $aliasMap = [];
+        foreach ($aliases as $alias) {
+            $normalizedAlias = $this->normalizeMatomoProductLabel($alias);
+            if ($normalizedAlias !== '') {
+                $aliasMap[$normalizedAlias] = true;
+            }
+        }
+
         $matchedRows = [];
+        $visits = 0;
+        $actions = 0;
+        $uniqueVisitors = 0;
         $orders = 0;
         $itemsPurchased = 0;
         $revenue = 0.0;
+        $weightedAveragePrice = 0.0;
+        $averagePriceWeight = 0;
         $weightedConversionRate = 0.0;
 
         foreach ($rows as $row) {
@@ -1078,28 +1164,57 @@ class Tec_matomo extends Module
             }
 
             $label = isset($row['label']) ? (string) $row['label'] : '';
-            if ($label === '' || !isset($aliasMap[$label])) {
+            if ($label === '' || !isset($aliasMap[$this->normalizeMatomoProductLabel($label)])) {
                 continue;
             }
 
-            $rowRevenue = $this->firstNumericValue($row, ['revenue', 'revenue_subtotal']);
-            $rowOrders = (int) $this->firstNumericValue($row, ['orders', 'nb_conversions', 'conversions']);
-            $rowQuantity = (int) $this->firstNumericValue($row, ['quantity', 'items', 'nb_items']);
+            $rowVisits = (int) $this->firstNumericValue($row, ['nb_visits', 'visits']);
+            $rowActions = (int) $this->firstNumericValue($row, ['nb_actions', 'actions']);
+            $rowUniqueVisitors = (int) $this->firstNumericValue($row, ['sum_daily_nb_uniq_visitors', 'nb_uniq_visitors', 'nb_users', 'unique_visitors']);
+            $rowRevenue = $this->firstRevenueValue($row);
+            $rowOrders = $this->firstOrderValue($row);
+            $rowQuantity = $this->firstItemsValue($row);
+            $rowAveragePrice = $this->firstNumericValue($row, ['avg_price', 'average_price', 'price']);
             $rowConversionRate = $this->normalizePercentValue($this->firstStringValue($row, ['conversion_rate']));
 
+            $visits += $rowVisits;
+            $actions += $rowActions;
+            $uniqueVisitors += $rowUniqueVisitors;
             $orders += $rowOrders;
             $itemsPurchased += $rowQuantity;
             $revenue += $rowRevenue;
             $weightedConversionRate += $rowConversionRate * max(1, $rowOrders);
+            if ($rowAveragePrice > 0) {
+                $rowAveragePriceWeight = max(1, $rowVisits);
+                $weightedAveragePrice += $rowAveragePrice * $rowAveragePriceWeight;
+                $averagePriceWeight += $rowAveragePriceWeight;
+            }
 
-            $matchedRows[] = [
-                'sku' => $label,
-                'orders' => $rowOrders,
-                'items_purchased' => $rowQuantity,
-                'revenue' => $rowRevenue,
-                'revenue_formatted' => $this->formatDashboardAmount($rowRevenue),
-                'conversion_rate' => $rowConversionRate > 0 ? number_format($rowConversionRate, 2, '.', '') . '%' : $this->firstStringValue($row, ['conversion_rate']),
-            ];
+            $displayLabel = $this->getMatomoProductDisplayLabel($label, $aliases, $labelType, $aggregateAliases);
+            if (!isset($matchedRows[$displayLabel])) {
+                $matchedRows[$displayLabel] = [
+                    'sku' => $displayLabel,
+                    'visits' => 0,
+                    'actions' => 0,
+                    'unique_visitors' => 0,
+                    'orders' => 0,
+                    'items_purchased' => 0,
+                    'revenue' => 0.0,
+                    'revenue_formatted' => $this->formatDashboardAmount(0),
+                    'conversion_rate' => '0.00%',
+                    'conversion_rate_value' => 0.0,
+                    'conversion_rate_weight' => 0,
+                ];
+            }
+
+            $matchedRows[$displayLabel]['visits'] += $rowVisits;
+            $matchedRows[$displayLabel]['actions'] += $rowActions;
+            $matchedRows[$displayLabel]['unique_visitors'] += $rowUniqueVisitors;
+            $matchedRows[$displayLabel]['orders'] += $rowOrders;
+            $matchedRows[$displayLabel]['items_purchased'] += $rowQuantity;
+            $matchedRows[$displayLabel]['revenue'] += $rowRevenue;
+            $matchedRows[$displayLabel]['conversion_rate_value'] += $rowConversionRate * max(1, $rowOrders);
+            $matchedRows[$displayLabel]['conversion_rate_weight'] += max(1, $rowOrders);
         }
 
         if (!$matchedRows) {
@@ -1111,6 +1226,21 @@ class Tec_matomo extends Module
             ];
         }
 
+        foreach ($matchedRows as &$matchedRow) {
+            $matchedRow['revenue_formatted'] = $this->formatDashboardAmount($matchedRow['revenue']);
+            if ($aggregateAliases && $matchedRow['visits'] > 0) {
+                $matchedRow['conversion_rate'] = $this->calculateRate($matchedRow['orders'], $matchedRow['visits']);
+            } else {
+                $matchedRow['conversion_rate'] = $matchedRow['conversion_rate_weight'] > 0
+                    ? number_format($matchedRow['conversion_rate_value'] / $matchedRow['conversion_rate_weight'], 2, '.', '') . '%'
+                    : '0.00%';
+            }
+            unset($matchedRow['conversion_rate_value'], $matchedRow['conversion_rate_weight']);
+        }
+        unset($matchedRow);
+
+        $matchedRows = array_values($matchedRows);
+
         usort($matchedRows, function ($left, $right) {
             if ($left['revenue'] === $right['revenue']) {
                 return 0;
@@ -1119,13 +1249,25 @@ class Tec_matomo extends Module
             return $left['revenue'] < $right['revenue'] ? 1 : -1;
         });
 
+        $averagePrice = 0.0;
+        if ($itemsPurchased > 0 && $revenue > 0) {
+            $averagePrice = $revenue / $itemsPurchased;
+        } elseif ($averagePriceWeight > 0) {
+            $averagePrice = $weightedAveragePrice / $averagePriceWeight;
+        }
+
         $metrics = [
+            'visits' => $visits,
+            'actions' => $actions,
+            'unique_visitors' => $uniqueVisitors,
             'orders' => $orders,
             'items_purchased' => $itemsPurchased,
             'revenue' => $revenue,
             'revenue_formatted' => $this->formatDashboardAmount($revenue),
-            'average_price' => $itemsPurchased > 0 ? $this->formatDashboardAmount($revenue / $itemsPurchased) : $this->formatDashboardAmount(0),
-            'conversion_rate' => $orders > 0 ? number_format($weightedConversionRate / $orders, 2, '.', '') . '%' : '0.00%',
+            'average_price' => $this->formatDashboardAmount($averagePrice),
+            'conversion_rate' => $aggregateAliases && $visits > 0
+                ? $this->calculateRate($orders, $visits)
+                : ($orders > 0 ? number_format($weightedConversionRate / $orders, 2, '.', '') . '%' : '0.00%'),
             'matched_rows' => count($matchedRows),
         ];
 
@@ -1135,6 +1277,120 @@ class Tec_matomo extends Module
             'aliases' => $aliases,
             'error' => '',
         ];
+    }
+
+    protected function getMatomoProductDisplayLabel($label, $aliases, $labelType, $aggregateAliases)
+    {
+        if ($labelType === 'name') {
+            return $this->l('Product name') . ': ' . $label;
+        }
+
+        if (!$aggregateAliases || !isset($aliases[0])) {
+            return $label;
+        }
+
+        return (string) $aliases[0];
+    }
+
+    protected function addProductReferrerRows($productData, $idProduct, $dateRange)
+    {
+        $productData['referrer_rows'] = $this->getProductReferrerRows($idProduct, $dateRange);
+
+        return $productData;
+    }
+
+    protected function getProductReferrerRows($idProduct, $dateRange)
+    {
+        $productUrls = $this->getProductMatomoUrls($idProduct);
+        if ($productUrls === []) {
+            return [];
+        }
+
+        $referrerRows = [];
+        foreach ($productUrls as $productUrl) {
+            $rows = $this->callMatomoApi('Referrers.getReferrerType', $dateRange, [
+                'idGoal' => 'ecommerceOrder',
+                'segment' => 'pageUrl=@' . $productUrl,
+                'filter_limit' => -1,
+            ]);
+            if (isset($rows['error']) || !is_array($rows)) {
+                continue;
+            }
+
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+
+                $label = isset($row['label']) ? trim((string) $row['label']) : '';
+                if ($label === '') {
+                    continue;
+                }
+
+                if (!isset($referrerRows[$label])) {
+                    $referrerRows[$label] = [
+                        'label' => $label,
+                        'visits' => 0,
+                        'actions' => 0,
+                        'orders' => 0,
+                        'revenue' => 0.0,
+                        'revenue_formatted' => $this->formatDashboardAmount(0),
+                    ];
+                }
+
+                $referrerRows[$label]['visits'] += (int) $this->firstNumericValue($row, ['nb_visits', 'visits']);
+                $referrerRows[$label]['actions'] += (int) $this->firstNumericValue($row, ['nb_actions', 'actions']);
+                $referrerRows[$label]['orders'] += $this->firstOrderValue($row);
+                $referrerRows[$label]['revenue'] += $this->firstRevenueValue($row);
+            }
+        }
+
+        foreach ($referrerRows as &$referrerRow) {
+            $referrerRow['revenue_formatted'] = $this->formatDashboardAmount($referrerRow['revenue']);
+        }
+        unset($referrerRow);
+
+        $referrerRows = array_values($referrerRows);
+        usort($referrerRows, function ($left, $right) {
+            if ($left['visits'] === $right['visits']) {
+                return 0;
+            }
+
+            return $left['visits'] < $right['visits'] ? 1 : -1;
+        });
+
+        return array_slice($referrerRows, 0, 8);
+    }
+
+    protected function getProductMatomoUrls($idProduct)
+    {
+        $urls = [];
+        foreach (Language::getLanguages(false) as $language) {
+            $idLang = isset($language['id_lang']) ? (int) $language['id_lang'] : 0;
+            if ($idLang <= 0) {
+                continue;
+            }
+
+            $product = new Product((int) $idProduct, false, $idLang);
+            if (!Validate::isLoadedObject($product)) {
+                continue;
+            }
+
+            $url = (string) $this->context->link->getProductLink($product, null, null, null, $idLang);
+            if ($url !== '') {
+                $urls[] = $url;
+            }
+        }
+
+        return array_values(array_unique($urls));
+    }
+
+    protected function normalizeMatomoProductLabel($label)
+    {
+        $label = html_entity_decode((string) $label, ENT_QUOTES, 'UTF-8');
+        $label = preg_replace('/\s+/', ' ', trim($label));
+
+        return $label === null ? '' : Tools::strtolower($label);
     }
 
     protected function callMatomoApi($method, $dateRange, $extraParams = [])
@@ -1234,7 +1490,7 @@ class Tec_matomo extends Module
 
     protected function firstItemsValue($row)
     {
-        $items = (int) $this->firstNumericValue($row, ['items', 'quantity', 'nb_items']);
+        $items = (int) $this->firstNumericValue($row, ['items', 'quantity', 'product_quantity', 'nb_items']);
         if ($items > 0) {
             return $items;
         }

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>tec_matomo - Changelog</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --text: #1f2933;
+            --muted: #5f6b7a;
+            --border: #d8dee6;
+            --panel: #f6f8fa;
+            --accent: #0b7285;
+        }
+        body {
+            margin: 0;
+            background: #fff;
+            color: var(--text);
+            font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        }
+        main {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 32px 24px 56px;
+        }
+        h1, h2, h3, h4 {
+            line-height: 1.25;
+            margin: 1.8em 0 .6em;
+        }
+        h1 {
+            margin-top: 0;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 2rem;
+        }
+        h2 {
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            font-size: 1.45rem;
+        }
+        h3 {
+            font-size: 1.18rem;
+        }
+        p {
+            margin: .7em 0;
+        }
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        blockquote {
+            margin: 1em 0;
+            padding: .7em 1em;
+            color: var(--muted);
+            border-left: 4px solid var(--border);
+            background: var(--panel);
+        }
+        code {
+            padding: .15em .35em;
+            border-radius: 4px;
+            background: var(--panel);
+            font-family: Consolas, Monaco, "Courier New", monospace;
+            font-size: .92em;
+        }
+        pre {
+            overflow: auto;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--panel);
+        }
+        pre code {
+            padding: 0;
+            background: transparent;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+        }
+        th, td {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            vertical-align: top;
+        }
+        th {
+            background: var(--panel);
+            text-align: left;
+        }
+        ul, ol {
+            padding-left: 1.5em;
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border);
+            margin: 2em 0;
+        }
+        .generated-note {
+            margin-bottom: 24px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--panel);
+            color: var(--muted);
+            font-size: .92em;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <div class="generated-note">Generated from the Markdown source included with the module.</div>
+<h1>CHANGELOG</h1>
+<p>All notable changes to this project will be documented in this file. The format is based on <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a>, and this project adheres to <a href="https://semver.org/">Semantic Versioning</a>.</p>
+<h2>[1.1.8] - 2026-07-08</h2>
+<h3>Added</h3>
+<ul>
+<li>Product back-office widget now shows product visits, actions, unique visitors, and Matomo report rows in addition to ecommerce revenue and orders.</li>
+<li>Product back-office widget now shows visit-source data for the product page using Matomo referrer reports segmented by product URL.</li>
+<li>English legacy translation file for the new product widget labels.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>Product statistics now include a year-to-date fallback when the last 30 days do not contain matching Matomo rows.</li>
+<li>Products without combinations now aggregate the plain product ID and <code>idv0</code> Matomo SKU rows, while products with real combinations keep variant SKU rows separated.</li>
+<li>Product statistics can fall back from SKU reports to product-name reports when SKU matching is not enough.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Product back-office statistics now match Matomo product-view rows and order rows recorded under different no-combination SKU labels.</li>
+<li>Average price, quantity, visits, and conversion metrics now read additional Matomo API field variants for more robust product reporting.</li>
+</ul>
+<h2>[1.1.7] - 2026-06-21</h2>
+<h3>Added</h3>
+<ul>
+<li>Consent manager integrations for iubenda, Cookiebot, and CookieYes.</li>
+<li>Configurable iubenda Analytics purpose ID for Matomo cookie consent.</li>
+<li>Dutch, Portuguese, Polish, and Romanian translations.</li>
+<li>README notes about LegalBlink evaluation and the requirement for a stable JavaScript consent API or native script blocking.</li>
+</ul>
+<h2>[1.1.6] - 2026-06-20</h2>
+<h3>Added</h3>
+<ul>
+<li>AI Assistant traffic block in the dedicated statistics controller when Matomo exposes the AI Assistant referrer channel.</li>
+<li>README notes for Matomo AI Assistant channel and AI Chatbot server-side tracking setup.</li>
+<li>Dedicated Matomo Analytics admin controller with menu entry and custom date range selector.</li>
+<li>Spanish, German, and French translations.</li>
+<li>Top 10 countries, products, and categories by revenue in the dedicated statistics controller.</li>
+<li>CSV, JSON, and XML export for the dedicated statistics controller dataset.</li>
+<li>Product back-office widget with Matomo ecommerce metrics by tracked SKU.</li>
+<li>Back-office dashboard widget with Matomo ecommerce KPIs, visits, and revenue by channel.</li>
+<li>Optional Art Cookie Choices Pro integration for Matomo cookie consent.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>Replaced deprecated tab lookup calls and improved module method resolution in the admin statistics controller.</li>
+<li>Dashboard and statistics channel revenue now use Matomo referrer types instead of detailed referrer rows.</li>
+<li>The dedicated statistics controller calendar now includes quick period presets for month, year, day -1, month -1, and year -1.</li>
+<li>Removed the legacy Matomo ImageGraph preview from the module configuration page.</li>
+<li>Consent manager settings now use a single selector with Disabled, LG Cookies Law, and Art Cookie Choices Pro options.</li>
+<li>Minimum PrestaShop compatibility is now 1.7.5.</li>
+</ul>
+<h2>[1.1.5] – 2025-09-29</h2>
+<h3>Added</h3>
+<ul>
+<li>Product view tracking: <code>setEcommerceView</code> is now pushed <strong>before</strong> <code>trackPageView</code> to correctly record product impressions in Matomo.</li>
+<li>Integration with <strong>LG Cookies Law (Línea Gráfica)</strong>: when enabled, the module listens to the consent status for the <em>Analytics</em> purpose and enables/disables Matomo cookies accordingly. This setting <strong>overrides Privacy Mode</strong>.</li>
+<li><strong>Heartbeat timer</strong> option to improve the accuracy of “time on page”.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>Prices sent to Matomo are now rounded to <strong>two decimals</strong> for cleaner reporting.</li>
+<li>Product data: categories are passed as an <strong>array</strong> (up to 5 levels); SKU now includes the combination suffix (<code>idv{id_attribute}</code>).</li>
+<li>Clearer handling of Privacy Mode options (None, Cookieless, Require cookie consent) and their interaction with LG integration.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Compatibility with <strong>PrestaShop 9</strong> asset management (loading with <code>defer</code> where required).</li>
+<li>Prevented duplicate pageviews on product pages by controlling the order of <code>trackPageView</code>.</li>
+<li>Improved robustness of controller detection on product pages.</li>
+</ul>
+<h3>Translations / UX</h3>
+<ul>
+<li>Full Italian translations for configuration and information pages.</li>
+<li>Clearer field descriptions (Matomo URL and SiteID, API Token, ecommerce tracking, UserID, noscript, secure cookies, subdomains, cross-domain, campaign parameters, Heartbeat).</li>
+</ul>
+
+</main>
+</body>
+</html>

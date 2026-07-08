@@ -43,22 +43,38 @@
       </div>
       <div class="row tec-matomo-product-kpis">
         <div class="col-md-3">
+          <strong>{l s='Visits' mod='tec_matomo'}</strong>
+          <span>{$mtm_product_metrics.visits|default:0|intval}</span>
+        </div>
+        <div class="col-md-3">
+          <strong>{l s='Actions' mod='tec_matomo'}</strong>
+          <span>{$mtm_product_metrics.actions|default:0|intval}</span>
+        </div>
+        <div class="col-md-3">
+          <strong>{l s='Unique visitors' mod='tec_matomo'}</strong>
+          <span>{$mtm_product_metrics.unique_visitors|default:0|intval}</span>
+        </div>
+        <div class="col-md-3">
           <strong>{l s='Conversion rate' mod='tec_matomo'}</strong>
           <span>{$mtm_product_metrics.conversion_rate|default:'0.00%'|escape:'html':'UTF-8'}</span>
         </div>
+      </div>
+      <div class="row tec-matomo-product-kpis">
         <div class="col-md-3">
-          <strong>{l s='Matched SKU rows' mod='tec_matomo'}</strong>
+          <strong>{l s='Matched report rows' mod='tec_matomo'}</strong>
           <span>{$mtm_product_metrics.matched_rows|default:0|intval}</span>
         </div>
       </div>
 
-      <h4>{l s='Matched SKUs' mod='tec_matomo'}</h4>
+      <h4>{l s='Matched Matomo rows' mod='tec_matomo'}</h4>
       {if $mtm_product_rows|count}
         <div class="table-responsive">
           <table class="table">
             <thead>
               <tr>
-                <th>{l s='SKU' mod='tec_matomo'}</th>
+                <th>{l s='Label' mod='tec_matomo'}</th>
+                <th class="text-right">{l s='Visits' mod='tec_matomo'}</th>
+                <th class="text-right">{l s='Actions' mod='tec_matomo'}</th>
                 <th class="text-right">{l s='Orders' mod='tec_matomo'}</th>
                 <th class="text-right">{l s='Items purchased' mod='tec_matomo'}</th>
                 <th class="text-right">{l s='Conversion rate' mod='tec_matomo'}</th>
@@ -69,6 +85,8 @@
               {foreach from=$mtm_product_rows item=row}
                 <tr>
                   <td>{$row.sku|escape:'html':'UTF-8'}</td>
+                  <td class="text-right">{$row.visits|default:0|intval}</td>
+                  <td class="text-right">{$row.actions|default:0|intval}</td>
                   <td class="text-right">{$row.orders|default:0|intval}</td>
                   <td class="text-right">{$row.items_purchased|default:0|intval}</td>
                   <td class="text-right">{$row.conversion_rate|default:'0.00%'|escape:'html':'UTF-8'}</td>
@@ -81,6 +99,38 @@
       {else}
         <p class="text-muted">
           {l s='No Matomo ecommerce data is available for this product in the selected period.' mod='tec_matomo'}
+        </p>
+      {/if}
+
+      <h4>{l s='Visit sources' mod='tec_matomo'}</h4>
+      {if $mtm_product_referrer_rows|count}
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{l s='Source' mod='tec_matomo'}</th>
+                <th class="text-right">{l s='Visits' mod='tec_matomo'}</th>
+                <th class="text-right">{l s='Actions' mod='tec_matomo'}</th>
+                <th class="text-right">{l s='Orders' mod='tec_matomo'}</th>
+                <th class="text-right">{l s='Revenue' mod='tec_matomo'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {foreach from=$mtm_product_referrer_rows item=row}
+                <tr>
+                  <td>{$row.label|escape:'html':'UTF-8'}</td>
+                  <td class="text-right">{$row.visits|default:0|intval}</td>
+                  <td class="text-right">{$row.actions|default:0|intval}</td>
+                  <td class="text-right">{$row.orders|default:0|intval}</td>
+                  <td class="text-right">{$row.revenue_formatted|default:'0.00'|escape:'html':'UTF-8'}</td>
+                </tr>
+              {/foreach}
+            </tbody>
+          </table>
+        </div>
+      {else}
+        <p class="text-muted">
+          {l s='No visit source data is available for this product in the selected period.' mod='tec_matomo'}
         </p>
       {/if}
 

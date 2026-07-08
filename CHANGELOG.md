@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.8] - 2026-07-08
+### Added
+- Product back-office widget now shows product visits, actions, unique visitors, and Matomo report rows in addition to ecommerce revenue and orders.
+- Product back-office widget now shows visit-source data for the product page using Matomo referrer reports segmented by product URL.
+- English legacy translation file for the new product widget labels.
+
+### Changed
+- Product statistics now include a year-to-date fallback when the last 30 days do not contain matching Matomo rows.
+- Products without combinations now aggregate the plain product ID and `idv0` Matomo SKU rows, while products with real combinations keep variant SKU rows separated.
+- Product statistics can fall back from SKU reports to product-name reports when SKU matching is not enough.
+
+### Fixed
+- Product back-office statistics now match Matomo product-view rows and order rows recorded under different no-combination SKU labels.
+- Average price, quantity, visits, and conversion metrics now read additional Matomo API field variants for more robust product reporting.
+
 ## [1.1.7] - 2026-06-21
 ### Added
 - Consent manager integrations for iubenda, Cookiebot, and CookieYes.

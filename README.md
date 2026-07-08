@@ -12,7 +12,7 @@ This module allows merchants to replace Google Analytics with Matomo, keeping **
 - **Ecommerce tracking**: product views, cart updates, orders, and revenue.
 - **Back-office dashboard widget** with ecommerce KPIs, visits, and revenue by channel from Matomo API.
 - Dedicated **Matomo Analytics** back-office statistics page with its own date range selector, quick period presets, top countries, top products, top categories, and CSV/JSON/XML export.
-- **Product back-office widget** with Matomo ecommerce revenue, orders, purchased items, and matched SKUs.
+- **Product back-office widget** with Matomo ecommerce revenue, orders, purchased items, product visits, matched Matomo rows, and visit sources.
 - **User ID tracking** for cross-device recognition (optional, may require user consent under GDPR).
 - **Privacy modes**:
   - None (default)
@@ -50,6 +50,14 @@ The statistics page supports manual date ranges, quick presets for month, year, 
 Matomo 5.5+ can classify referral traffic from AI tools such as ChatGPT, Claude, Gemini, Copilot, and Perplexity under the **AI Assistant** channel. When that channel is available in Matomo API data, the dedicated statistics page shows a separate AI Assistant traffic block.
 
 Matomo 5.8+ also supports AI Chatbot tracking through server-side integrations such as Cloudflare, Amazon CloudFront, WordPress, or the Matomo HTTP Tracking API. This module does not configure server-side chatbot tracking automatically; use Matomo setup instructions when that report is required.
+
+## Product back-office metrics
+
+When the Matomo API token is configured, the product edit page shows product-level ecommerce statistics from Matomo. The widget matches product views and purchases by tracked SKU and falls back to product-name reports when SKU data is not enough.
+
+For products without combinations, the widget treats the plain product ID and the `idv0` SKU used by order tracking as the same product. Products with real combinations keep their `idv<id_product_attribute>` rows separated, so variant-level reporting remains available.
+
+The widget also shows visit-source data for the product page by querying Matomo referrer reports with a page URL segment generated from the product URLs in the active shop languages.
 
 ## Cookie consent integrations
 
