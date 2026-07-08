@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.9] - 2026-07-08
+### Fixed
+- Added the missing `documentation/index.php` directory guard required by the PrestaShop validator.
+
 ## [1.1.8] - 2026-07-08
 ### Added
 - Product back-office widget now shows product visits, actions, unique visitors, and Matomo report rows in addition to ecommerce revenue and orders.
