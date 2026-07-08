@@ -7,7 +7,7 @@
  *  @author    Tecnoacquisti.com <shop@tecnoacquisti.com>
  *  @copyright 2009-2026 Tecnoacquisti.com
  *  @license   One Paid Licence By WebSite Using This Module. No Rent. No Sell. No Share.
- *  @version   1.1.9
+ *  @version   1.2.0
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -17,12 +17,13 @@ if (!defined('_PS_VERSION_')) {
 class Tec_matomo extends Module
 {
     protected $config_form = false;
+    protected $trackedOrderIds = [];
 
     public function __construct()
     {
         $this->name = 'tec_matomo';
         $this->tab = 'analytics_stats';
-        $this->version = '1.1.9';
+        $this->version = '1.2.0';
         $this->author = 'Tecnoacquisti.com';
         $this->need_instance = 0;
 
@@ -76,7 +77,7 @@ class Tec_matomo extends Module
             $this->installStatsTab() &&
             $this->registerHook('displayFooterProduct') &&
             $this->registerHook('displayFooter') &&
-            $this->registerHook('orderConfirmation') &&
+            $this->registerHook('displayOrderConfirmation') &&
             $this->registerHook('actionFrontControllerSetMedia') &&
             $this->registerHook('displayAfterBodyOpeningTag') &&
             $this->registerHook('displayBackOfficeHeader') &&
@@ -1832,12 +1833,27 @@ class Tec_matomo extends Module
 
     }
 
-    public function hookOrderConfirmation($params)
+    public function hookDisplayOrderConfirmation($params)
+    {
+        return $this->renderOrderConfirmationTracking($params);
+    }
+
+    protected function renderOrderConfirmationTracking($params)
     {
         $active = Configuration::get('TEC_MATOMO_ACTIVE');
         $ecommerce = Configuration::get('TEC_MATOMO_ECOMMERCE');
 
+        if (empty($params['order']) || !Validate::isLoadedObject($params['order'])) {
+            return '';
+        }
+
         $order = $params['order'];
+        $idOrder = (int) $order->id;
+        if (isset($this->trackedOrderIds[$idOrder])) {
+            return '';
+        }
+        $this->trackedOrderIds[$idOrder] = true;
+
         $order_id = $order->reference;
         $total_paid = $order->total_paid;
         $total_paid_tax_excl = $order->total_paid_tax_excl;
@@ -1848,7 +1864,7 @@ class Tec_matomo extends Module
         if ($total_discounts == 0) {
             $total_discounts = 'false';
         }
-        $order_list_details = array();
+        $order_list_details = [];
 
         $ord_details = $order->getOrderDetailList();
         foreach ($ord_details as $detail) {
@@ -1862,18 +1878,18 @@ class Tec_matomo extends Module
             if ($product_category == '') {
                 $product_category = $this->l('Not detected');
             }
-            $product_price = $detail['product_price'];
+            $product_price = isset($detail['unit_price_tax_incl']) ? (float) $detail['unit_price_tax_incl'] : (float) $detail['product_price'];
             $product_quantity = $detail['product_quantity'];
-            $order_list_details[] = array(
+            $order_list_details[] = [
                 'product_sku' => $product_sku,
                 'product_name' => $product_name,
                 'product_category' => $product_category,
-                'product_price' => $product_price,
-                'product_quantity' => $product_quantity
-            );
+                'product_price' => (float) $product_price,
+                'product_quantity' => (int) $product_quantity
+            ];
         }
 
-        $this->smarty->assign(array(
+        $this->smarty->assign([
             'ecommerce' => $ecommerce,
             'order_id' => $order_id,
             'total_paid' => (float)$total_paid,
@@ -1882,7 +1898,7 @@ class Tec_matomo extends Module
             'total_shipping' => (float)$total_shipping,
             'total_discounts' => $total_discounts,
             'ord_details' => $order_list_details,
-        ));
+        ]);
         if ($active == 1 && $ecommerce ==1) {
             return $this->display(__FILE__, 'orderconfirmation.tpl');
         }

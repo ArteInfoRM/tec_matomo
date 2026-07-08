@@ -11,6 +11,12 @@
 *
 *}
 <!-- Start Matomo PrestaShop Module by https://www.tecnoacquisti.com -->
+{literal}
+<script type="text/javascript">
+    window._paq = window._paq || [];
+    _paq.push(['clearEcommerceCart']);
+</script>
+{/literal}
 {foreach from=$ord_details item=product}
 {literal}
 <script type="text/javascript">

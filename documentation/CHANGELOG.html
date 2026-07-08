@@ -115,6 +115,14 @@
     <div class="generated-note">Generated from the Markdown source included with the module.</div>
 <h1>CHANGELOG</h1>
 <p>All notable changes to this project will be documented in this file. The format is based on <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a>, and this project adheres to <a href="https://semver.org/">Semantic Versioning</a>.</p>
+<h2>[1.2.0] - 2026-07-08</h2>
+<h3>Fixed</h3>
+<ul>
+<li>Cart update tracking now clears the Matomo ecommerce cart before rebuilding it, preventing stale cart items from polluting product average price reports.</li>
+<li>Cart update tracking now uses the same no-combination SKU suffix convention as order tracking (<code>idv0</code>) and prefers unit prices over line totals.</li>
+<li>Order confirmation tracking now uses the canonical <code>displayOrderConfirmation</code> hook used by PS 1.7+ confirmation and free-order flows, and clears the Matomo ecommerce cart before sending order items.</li>
+<li>Order item prices now prefer the order line unit price including tax, matching product view tracking more closely.</li>
+</ul>
 <h2>[1.1.9] - 2026-07-08</h2>
 <h3>Fixed</h3>
 <ul>

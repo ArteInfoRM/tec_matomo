@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-07-08
+### Fixed
+- Cart update tracking now clears the Matomo ecommerce cart before rebuilding it, preventing stale cart items from polluting product average price reports.
+- Cart update tracking now uses the same no-combination SKU suffix convention as order tracking (`idv0`) and prefers unit prices over line totals.
+- Order confirmation tracking now uses the canonical `displayOrderConfirmation` hook used by PS 1.7+ confirmation and free-order flows, and clears the Matomo ecommerce cart before sending order items.
+- Order item prices now prefer the order line unit price including tax, matching product view tracking more closely.
+
 ## [1.1.9] - 2026-07-08
 ### Fixed
 - Added the missing `documentation/index.php` directory guard required by the PrestaShop validator.
