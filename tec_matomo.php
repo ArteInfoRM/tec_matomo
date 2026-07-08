@@ -1156,6 +1156,8 @@ class Tec_matomo extends Module
         $revenue = 0.0;
         $weightedAveragePrice = 0.0;
         $averagePriceWeight = 0;
+        $purchasedAveragePriceTotal = 0.0;
+        $purchasedAveragePriceWeight = 0;
         $weightedConversionRate = 0.0;
 
         foreach ($rows as $row) {
@@ -1188,6 +1190,11 @@ class Tec_matomo extends Module
                 $rowAveragePriceWeight = max(1, $rowVisits);
                 $weightedAveragePrice += $rowAveragePrice * $rowAveragePriceWeight;
                 $averagePriceWeight += $rowAveragePriceWeight;
+                if ($rowQuantity > 0 || $rowOrders > 0) {
+                    $rowPurchasedAveragePriceWeight = max(1, $rowQuantity);
+                    $purchasedAveragePriceTotal += $rowAveragePrice * $rowPurchasedAveragePriceWeight;
+                    $purchasedAveragePriceWeight += $rowPurchasedAveragePriceWeight;
+                }
             }
 
             $displayLabel = $this->getMatomoProductDisplayLabel($label, $aliases, $labelType, $aggregateAliases);
@@ -1250,10 +1257,12 @@ class Tec_matomo extends Module
         });
 
         $averagePrice = 0.0;
-        if ($itemsPurchased > 0 && $revenue > 0) {
-            $averagePrice = $revenue / $itemsPurchased;
+        if ($purchasedAveragePriceWeight > 0) {
+            $averagePrice = $purchasedAveragePriceTotal / $purchasedAveragePriceWeight;
         } elseif ($averagePriceWeight > 0) {
             $averagePrice = $weightedAveragePrice / $averagePriceWeight;
+        } elseif ($itemsPurchased > 0 && $revenue > 0) {
+            $averagePrice = $revenue / $itemsPurchased;
         }
 
         $metrics = [
