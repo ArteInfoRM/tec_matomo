@@ -1,0 +1,56 @@
+{
+  "$schema": "https://bom.cyclonedx.org/schema/bom-1.5.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:7dce625c-efcd-4c52-a512-2d0d10b6095e",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-09-08T00:00:00Z",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "Manual release inventory",
+          "version": "1.0"
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "bom-ref": "pkg:generic/arteinformatica/tec_matomo@1.2.1",
+      "supplier": {
+        "name": "Arte e Informatica di Loris Modena e C. s.a.s."
+      },
+      "name": "tec_matomo",
+      "version": "1.2.1",
+      "description": "Matomo Analytics integration module for PrestaShop.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:generic/arteinformatica/tec_matomo@1.2.1"
+    }
+  },
+  "components": [],
+  "services": [
+    {
+      "bom-ref": "urn:tecnoacquisti:tec_matomo:matomo-service",
+      "provider": {
+        "name": "Merchant-configured Matomo instance"
+      },
+      "name": "Matomo Analytics API",
+      "description": "External analytics and reporting service. Endpoint and version are configured by the merchant and are not embedded in the module.",
+      "authenticated": true,
+      "x-trust-boundary": true
+    }
+  ],
+  "properties": [
+    {
+      "name": "cdx:release:inventory-scope",
+      "value": "No third-party library, SDK, or vendored dependency is included in the release package. PrestaShop and PHP are environment dependencies."
+    }
+  ]
+}

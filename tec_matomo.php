@@ -7,7 +7,7 @@
  *  @author    Tecnoacquisti.com <shop@tecnoacquisti.com>
  *  @copyright 2009-2026 Tecnoacquisti.com
  *  @license   One Paid Licence By WebSite Using This Module. No Rent. No Sell. No Share.
- *  @version   1.2.0
+ *  @version   1.2.1
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -23,7 +23,7 @@ class Tec_matomo extends Module
     {
         $this->name = 'tec_matomo';
         $this->tab = 'analytics_stats';
-        $this->version = '1.2.0';
+        $this->version = '1.2.1';
         $this->author = 'Tecnoacquisti.com';
         $this->need_instance = 0;
 
@@ -1321,7 +1321,7 @@ class Tec_matomo extends Module
             $rows = $this->callMatomoApi('Referrers.getReferrerType', $dateRange, [
                 'idGoal' => 'ecommerceOrder',
                 'segment' => 'pageUrl=@' . $productUrl,
-                'filter_limit' => -1,
+                'filter_limit' => 20,
             ]);
             if (isset($rows['error']) || !is_array($rows)) {
                 continue;
@@ -1416,9 +1416,26 @@ class Tec_matomo extends Module
             'token_auth' => (string) Configuration::get('TEC_MATOMO_TOKEN'),
         ], $extraParams);
         $url = $baseUrl . 'index.php?' . http_build_query($params, '', '&');
-        $response = Tools::file_get_contents($url);
+        if (!function_exists('curl_init')) {
+            return ['error' => $this->l('Matomo API did not return data.')];
+        }
 
-        if ($response === false || $response === '') {
+        $handle = curl_init($url);
+        if ($handle === false) {
+            return ['error' => $this->l('Matomo API did not return data.')];
+        }
+        curl_setopt_array($handle, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+        ]);
+        $response = curl_exec($handle);
+        $httpCode = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
+        curl_close($handle);
+
+        if ($response === false || $response === '' || $httpCode < 200 || $httpCode >= 300) {
             return ['error' => $this->l('Matomo API did not return data.')];
         }
 

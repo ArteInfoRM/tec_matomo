@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] - 2026-09-08
+### Fixed
+- Replaced the legacy unbounded Matomo API helper with cURL requests using a five-second connection timeout, a twenty-second total timeout, TLS certificate verification, and explicit HTTP-status validation.
+- Limited per-language product referrer API queries to 20 rows, preventing an unbounded product-report request from delaying the back office.
+
 ## [1.2.0] - 2026-07-08
 ### Fixed
 - Cart update tracking now clears the Matomo ecommerce cart before rebuilding it, preventing stale cart items from polluting product average price reports.

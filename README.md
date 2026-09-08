@@ -33,6 +33,7 @@ This module allows merchants to replace Google Analytics with Matomo, keeping **
 
 - PrestaShop 1.7.5 or newer
 - Matomo On-Premise or Matomo Cloud instance (URL and Site ID required)
+- PHP cURL extension for back-office API statistics, product metrics, and exports
 
 ## Installation
 
@@ -58,6 +59,9 @@ When the Matomo API token is configured, the product edit page shows product-lev
 For products without combinations, the widget treats the plain product ID and the `idv0` SKU used by order tracking as the same product. Products with real combinations keep their `idv<id_product_attribute>` rows separated, so variant-level reporting remains available.
 
 The widget also shows visit-source data for the product page by querying Matomo referrer reports with a page URL segment generated from the product URLs in the active shop languages.
+Back-office API calls use a five-second connection timeout and a twenty-second
+total timeout. Product referrer lookups are limited to 20 rows per shop language
+so an unavailable or slow Matomo instance does not indefinitely block the editor.
 
 ## Cookie consent integrations
 

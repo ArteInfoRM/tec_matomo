@@ -143,6 +143,7 @@
 <ul>
 <li>PrestaShop 1.7.5 or newer</li>
 <li>Matomo On-Premise or Matomo Cloud instance (URL and Site ID required)</li>
+<li>PHP cURL extension for back-office API statistics, product metrics, and exports</li>
 </ul>
 <h2>Installation</h2>
 <ol>
@@ -159,7 +160,7 @@
 <h2>Product back-office metrics</h2>
 <p>When the Matomo API token is configured, the product edit page shows product-level ecommerce statistics from Matomo. The widget matches product views and purchases by tracked SKU and falls back to product-name reports when SKU data is not enough.</p>
 <p>For products without combinations, the widget treats the plain product ID and the <code>idv0</code> SKU used by order tracking as the same product. Products with real combinations keep their <code>idv&lt;id_product_attribute&gt;</code> rows separated, so variant-level reporting remains available.</p>
-<p>The widget also shows visit-source data for the product page by querying Matomo referrer reports with a page URL segment generated from the product URLs in the active shop languages.</p>
+<p>The widget also shows visit-source data for the product page by querying Matomo referrer reports with a page URL segment generated from the product URLs in the active shop languages. Back-office API calls use a five-second connection timeout and a twenty-second total timeout. Product referrer lookups are limited to 20 rows per shop language so an unavailable or slow Matomo instance does not indefinitely block the editor.</p>
 <h2>Cookie consent integrations</h2>
 <p>Matomo does not use Google Consent Mode. When Matomo cookies require consent, this module can call Matomo&#039;s cookie consent API after the selected cookie banner grants analytics/statistics consent.</p>
 <p>Supported integrations:</p>
