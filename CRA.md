@@ -1,7 +1,7 @@
 # CRA readiness note
 
 This document records release-facing security information for Matomo Analytics
-for PrestaShop (`tec_matomo`) version 1.2.1. It is not an EU Cyber Resilience
+for PrestaShop (`tec_matomo`) version 1.3.1. It is not an EU Cyber Resilience
 Act declaration of conformity and does not replace the technical documentation,
 risk assessment, vulnerability-handling process, or retention records that may
 be required for a specific distribution.
@@ -23,6 +23,14 @@ configuration, and API-token permissions. The module does not bundle Matomo or
 a consent-manager SDK.
 
 ## Security controls in this release
+
+- Purchase tracking checks qualifying states before browser or server delivery.
+  Server delivery uses a CLI-only worker, bounded retries and a persistent
+  shop-scoped outbox. Tracking credentials are separate from the reporting
+  token, masked in the back office and sent only in HTTPS POST bodies.
+- New purchase source files declare author, copyright and the repository's
+  existing MIT license. This metadata update does not change licensing terms.
+
 
 - The Matomo API token is used only for server-side Matomo API requests and is
   not rendered in front-office templates.

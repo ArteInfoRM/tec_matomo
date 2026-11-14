@@ -2,8 +2,9 @@
 /**
  * Install purchase eligibility and the asynchronous outbox.
  *
+ * @author    Tecnoacquisti.com <helpdesk@tecnoacquisti.com>
  * @copyright 2026 Tecnoacquisti.com
- * @license See the module LICENSE file.
+ * @license   https://opensource.org/licenses/MIT MIT License
  */
 if (!defined('_PS_VERSION_')) {
     exit;

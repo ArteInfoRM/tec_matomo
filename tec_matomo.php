@@ -7,7 +7,7 @@
  *  @author    Tecnoacquisti.com <shop@tecnoacquisti.com>
  *  @copyright 2009-2026 Tecnoacquisti.com
  *  @license   One Paid Licence By WebSite Using This Module. No Rent. No Sell. No Share.
- *  @version   1.3.0
+ *  @version   1.3.1
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -27,7 +27,7 @@ class Tec_matomo extends Module
     {
         $this->name = 'tec_matomo';
         $this->tab = 'analytics_stats';
-        $this->version = '1.3.0';
+        $this->version = '1.3.1';
         $this->author = 'Tecnoacquisti.com';
         $this->need_instance = 0;
 

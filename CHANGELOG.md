@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] - 2026-11-14
+### Fixed
+- Add complete, correctly ordered author, copyright and MIT license metadata to the new purchase tracking files and directory guards.
+- Bind the CLI worker shop through the module context and verify the loaded module type before processing the queue.
+- Remove redundant product-property checks and normalize the global replay checkpoint before checking for an absent value.
+- Use the associative-fetch and statement APIs shared by DBAL 2.13 and 3.x, without calling the removed fetchAll method.
+- Protect template and generated configuration files with the standard root Apache rules, preserving existing PHP access restrictions.
+
 ## [1.3.0] - 2026-11-14
 ### Fixed
 - Require qualifying order states before generating purchase tracking. Payment errors and unpaid backorders no longer produce purchases merely because the customer reaches order confirmation (issue #1).

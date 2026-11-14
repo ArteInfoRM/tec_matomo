@@ -2,8 +2,9 @@
 /**
  * Doctrine DBAL adapter for PrestaShop 8 and later.
  *
+ * @author    Tecnoacquisti.com <helpdesk@tecnoacquisti.com>
  * @copyright 2026 Tecnoacquisti.com
- * @license See the module LICENSE file.
+ * @license   https://opensource.org/licenses/MIT MIT License
  */
 declare(strict_types=1);
 
@@ -25,24 +26,16 @@ final class PurchaseConnection
         $this->connection = $connection;
     }
 
-    /** Support the DBAL versions supplied by the supported PrestaShop branches. */
+    /** Use the statement API available in the DBAL versions supplied by PS 8+. */
     public function execute(string $sql): void
     {
-        if (method_exists($this->connection, 'executeStatement')) {
-            $this->connection->executeStatement($sql);
-        } else {
-            $this->connection->executeUpdate($sql);
-        }
+        $this->connection->executeStatement($sql);
     }
 
-    /** Fetch associative rows with the installed DBAL API. */
+    /** Fetch associative rows through the shared DBAL 2.13 and 3.x API. */
     public function rows(string $sql): array
     {
-        if (method_exists($this->connection, 'fetchAllAssociative')) {
-            return $this->connection->fetchAllAssociative($sql);
-        }
-
-        return $this->connection->fetchAll($sql);
+        return $this->connection->fetchAllAssociative($sql);
     }
 
     /** Quote a validated string value with the active database driver. */

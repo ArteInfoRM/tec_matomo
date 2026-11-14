@@ -2,8 +2,9 @@
 /**
  * Scheduled purchase outbox runner. Never accepts HTTP requests or URL secrets.
  *
+ * @author    Tecnoacquisti.com <helpdesk@tecnoacquisti.com>
  * @copyright 2026 Tecnoacquisti.com
- * @license See the module LICENSE file.
+ * @license   https://opensource.org/licenses/MIT MIT License
  */
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -27,13 +28,16 @@ if (!Validate::isLoadedObject($shop) || !$shop->active) {
     exit(1);
 }
 Shop::setContext(Shop::CONTEXT_SHOP, (int) $shopId);
-Context::getContext()->shop = $shop;
-if (!Module::isEnabled('tec_matomo')) {
-    fwrite(STDERR, "Module disabled in this shop.\n");
-    exit(1);
-}
 try {
     $module = Module::getInstanceByName('tec_matomo');
+    if (!($module instanceof Tec_matomo)) {
+        throw new RuntimeException('Purchase module unavailable.');
+    }
+    $module->setPurchaseWorkerShop($shop);
+    if (!Module::isEnabled('tec_matomo')) {
+        fwrite(STDERR, "Module disabled in this shop.\n");
+        exit(1);
+    }
     $result = $module->processPurchaseQueue((int) $shopId, (int) $limit, isset($options['retry-failed']));
     echo json_encode($result) . "\n";
     if ($result['failed'] > 0) {

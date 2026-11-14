@@ -2,8 +2,9 @@
 /**
  * PrestaShop 1.7 database adapter for the purchase outbox.
  *
+ * @author    Tecnoacquisti.com <helpdesk@tecnoacquisti.com>
  * @copyright 2026 Tecnoacquisti.com
- * @license See the module LICENSE file.
+ * @license   https://opensource.org/licenses/MIT MIT License
  */
 if (!defined('_PS_VERSION_')) {
     exit;

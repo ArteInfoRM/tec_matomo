@@ -2,8 +2,9 @@
 /**
  * Purchase eligibility, shop-scoped configuration and asynchronous delivery.
  *
+ * @author    Tecnoacquisti.com <helpdesk@tecnoacquisti.com>
  * @copyright 2026 Tecnoacquisti.com
- * @license See the module LICENSE file.
+ * @license   https://opensource.org/licenses/MIT MIT License
  */
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -100,7 +101,7 @@ trait TecMatomoPurchaseTracking
         foreach ($payload['ec_items'] as &$item) {
             $productId = (int) strstr($item[0], 'v', true);
             $product = new Product($productId, false, (int) $order->id_lang);
-            $category = isset($product->category) && is_string($product->category) ? $product->category : '';
+            $category = is_string($product->category) ? $product->category : '';
             if (strlen($category) > 1024 || preg_match('//u', $category) !== 1 || preg_match('/[\x00-\x1f\x7f]/', $category)) {
                 throw new InvalidArgumentException('Invalid purchase product category.');
             }
@@ -175,7 +176,7 @@ trait TecMatomoPurchaseTracking
             if (!$this->purchaseRepository()->install()) {
                 return false;
             }
-            if (Configuration::getGlobalValue('TEC_MATOMO_PURCHASE_FIRST_ORDER') === false
+            if ((string) Configuration::getGlobalValue('TEC_MATOMO_PURCHASE_FIRST_ORDER') === ''
                 && !Configuration::updateGlobalValue('TEC_MATOMO_PURCHASE_FIRST_ORDER', $this->purchaseRepository()->firstOrderId())) {
                 return false;
             }
@@ -279,6 +280,15 @@ trait TecMatomoPurchaseTracking
         curl_close($handle);
 
         return $response !== false && $status === 204;
+    }
+
+    /** Bind the module's existing context after selecting a CLI worker shop. */
+    public function setPurchaseWorkerShop(Shop $shop)
+    {
+        if (!Validate::isLoadedObject($shop) || !$shop->active) {
+            throw new InvalidArgumentException('Invalid or inactive shop.');
+        }
+        $this->context->shop = $shop;
     }
 
     /** Process a bounded shop-specific batch; the CLI runner supplies retry scheduling. */

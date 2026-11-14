@@ -2,8 +2,9 @@
 /**
  * Isolated purchase regression checks; never contact Matomo or write shop data.
  *
+ * @author    Tecnoacquisti.com <helpdesk@tecnoacquisti.com>
  * @copyright 2026 Tecnoacquisti.com
- * @license See the module LICENSE file.
+ * @license   https://opensource.org/licenses/MIT MIT License
  */
 if (PHP_SAPI !== 'cli') {
     exit;
@@ -34,6 +35,7 @@ class Shop
 {
     public $id;
     public $id_shop_group = 1;
+    public $active = true;
     public function __construct($id) { $this->id = $id; }
     public static function getShops($active, $group, $ids) { return [1, 2]; }
 }
@@ -272,4 +274,12 @@ $module->outbox->boundary = 100;
 $verify(upgrade_module_1_3_0($module) && Configuration::$globals['TEC_MATOMO_PURCHASE_FIRST_ORDER'] === 42, 'An upgrade retry must preserve the original replay boundary.');
 $module->registrationResult = false;
 $verify(!upgrade_module_1_3_0($module), 'A failed hook registration must fail the upgrade.');
+$module->setPurchaseWorkerShop(new Shop(2));
+$verify($module->context->shop->id === 2, 'The CLI runner must bind the selected shop through the module context.');
+$inactive = new Shop(2); $inactive->active = false; $rejected = false;
+try { $module->setPurchaseWorkerShop($inactive); } catch (InvalidArgumentException $exception) { $rejected = true; }
+$verify($rejected, 'An inactive worker shop must be rejected.');
+Configuration::$globals['TEC_MATOMO_PURCHASE_FIRST_ORDER'] = '';
+$module->registrationResult = true;
+$verify(upgrade_module_1_3_0($module) && Configuration::$globals['TEC_MATOMO_PURCHASE_FIRST_ORDER'] === 100, 'A missing or empty string checkpoint must initialize correctly.');
 echo $checks . " purchase tracking checks passed.\n";

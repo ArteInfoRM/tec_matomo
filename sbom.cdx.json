@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:d630265c-3155-4042-9db4-2772822995a4",
+  "serialNumber": "urn:uuid:bb67fe46-4579-42b5-931f-8e88b1b2bf9a",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-14T10:03:02.531641Z",
+    "timestamp": "2026-11-14T10:33:37.138710Z",
     "tools": {
       "components": [
         {
@@ -17,12 +17,12 @@
     },
     "component": {
       "type": "application",
-      "bom-ref": "tec_matomo@1.3.0",
+      "bom-ref": "tec_matomo@1.3.1",
       "supplier": {
         "name": "Arte e Informatica di Loris Modena e C. s.a.s."
       },
       "name": "tec_matomo",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "description": "Matomo Analytics integration module for PrestaShop.",
       "licenses": [
         {
