@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-11-14
+### Fixed
+- Require qualifying order states before generating purchase tracking. Payment errors and unpaid backorders no longer produce purchases merely because the customer reaches order confirmation (issue #1).
+- Validate order-line IDs, quantities, names and monetary values before browser or server serialization, and use the product subtotal excluding shipping.
+
+### Added
+- Shop-specific purchase state selection with paid-state defaults and hard exclusions for error, cancellation, refund and unpaid backorder states.
+- Optional cookieless server purchase delivery for cookieless shops without a consent manager, using an outbox, atomic leases, bounded retries and a CLI worker for asynchronous payment confirmations and missed-hook reconciliation.
+- A separate masked HTTPS tracking token, stable shop/order purchase IDs and an upgrade cutoff preventing automatic historical replay.
+- Separate Doctrine DBAL (PS 8+) and legacy database paths for the outbox.
+
+
 ## [1.2.1] - 2026-09-08
 ### Fixed
 - Replaced the legacy unbounded Matomo API helper with cURL requests using a five-second connection timeout, a twenty-second total timeout, TLS certificate verification, and explicit HTTP-status validation.

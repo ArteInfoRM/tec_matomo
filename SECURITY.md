@@ -15,7 +15,7 @@ https://www.tecnoacquisti.com/it/content/19-come-inviare-le-tue-password.
 
 | Release line | PrestaShop and PHP requirements | Security support |
 |---|---|---|
-| 1.2.x | PrestaShop 1.7.5+ and the PHP version supported by the installed PrestaShop release | Current maintained line; contact us for the applicable support terms. |
+| 1.2.x / 1.3.x | PrestaShop 1.7.5+ and the PHP version supported by the installed PrestaShop release | Current maintained line; contact us for the applicable support terms. |
 
 ## Security updates
 
@@ -23,3 +23,13 @@ Security fixes and update instructions are distributed through the module
 repository and the applicable customer delivery channel. Commercial assistance
 and security update availability are managed separately. Read each update note
 for affected versions, compatibility requirements, and any required action.
+
+## Purchase tracking credentials and storage
+
+The optional purchase tracking token is distinct from the reporting token.
+It is masked in the back office and sent only in HTTPS POST bodies. The CLI
+worker accepts no HTTP requests or URL secrets. Queue diagnostics contain fixed
+error codes rather than payloads or upstream responses. The outbox stores a
+minimal shop/order delivery ledger, which survives uninstall to prevent replay.
+Server purchases are restricted to the module's cookieless configuration without
+a consent manager; they do not forward customer cookies, IP, user agent or email.

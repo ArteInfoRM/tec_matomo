@@ -7,15 +7,19 @@
  *  @author    Tecnoacquisti.com <shop@tecnoacquisti.com>
  *  @copyright 2009-2026 Tecnoacquisti.com
  *  @license   One Paid Licence By WebSite Using This Module. No Rent. No Sell. No Share.
- *  @version   1.2.1
+ *  @version   1.3.0
  */
 
 if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+require_once __DIR__ . '/classes/PurchaseTracking.php';
+
 class Tec_matomo extends Module
 {
+    use TecMatomoPurchaseTracking;
+
     protected $config_form = false;
     protected $trackedOrderIds = [];
 
@@ -23,7 +27,7 @@ class Tec_matomo extends Module
     {
         $this->name = 'tec_matomo';
         $this->tab = 'analytics_stats';
-        $this->version = '1.2.1';
+        $this->version = '1.3.0';
         $this->author = 'Tecnoacquisti.com';
         $this->need_instance = 0;
 
@@ -51,6 +55,7 @@ class Tec_matomo extends Module
         Configuration::updateValue('TEC_MATOMO_SITEID', '');
         Configuration::updateValue('TEC_MATOMO_TOKEN', '');
         Configuration::updateValue('TEC_MATOMO_ECOMMERCE', false);
+        Configuration::updateValue('TEC_MATOMO_PURCHASE_SERVER', 0);
         Configuration::updateValue('TEC_MATOMO_USERID', false);
         Configuration::updateValue('TEC_MATOMO_JS', false);
         Configuration::updateValue('TEC_MATOMO_DNTRACK', false);
@@ -83,7 +88,8 @@ class Tec_matomo extends Module
             $this->registerHook('displayBackOfficeHeader') &&
             $this->registerHook('actionDispatcherBefore') &&
             $this->registerHook('dashboardZoneTwo') &&
-            $this->registerHook('displayAdminProductsExtra');
+            $this->registerHook('displayAdminProductsExtra') &&
+            $this->installPurchaseTracking();
     }
 
     public function uninstall()
@@ -93,6 +99,9 @@ class Tec_matomo extends Module
         Configuration::deleteByName('TEC_MATOMO_SITEID');
         Configuration::deleteByName('TEC_MATOMO_TOKEN');
         Configuration::deleteByName('TEC_MATOMO_ECOMMERCE');
+        Configuration::deleteByName('TEC_MATOMO_PURCHASE_STATES');
+        Configuration::deleteByName('TEC_MATOMO_PURCHASE_SERVER');
+        Configuration::deleteByName('TEC_MATOMO_PURCHASE_TOKEN');
         Configuration::deleteByName('TEC_MATOMO_USERID');
         Configuration::deleteByName('TEC_MATOMO_JS');
         Configuration::deleteByName('TEC_MATOMO_DNTRACK');
@@ -271,6 +280,34 @@ class Tec_matomo extends Module
                         'desc'  => $this->l('Optional: import and/or show data in PrestaShop back office'),
                         'name'  => 'TEC_MATOMO_TOKEN',
                     ),
+
+                    [
+                        'type' => 'select',
+                        'label' => $this->l('Qualifying purchase states'),
+                        'name' => 'TEC_MATOMO_PURCHASE_STATES[]',
+                        'multiple' => true,
+                        'size' => 8,
+                        'desc' => $this->l('Only selected states generate purchases. Defaults to paid states. Add pending bank transfer or cash-on-delivery states only if your reporting policy counts them as purchases. Error, cancellation, refund and unpaid backorder states cannot qualify.'),
+                        'options' => ['query' => $this->purchaseStateOptions(), 'id' => 'id_order_state', 'name' => 'name'],
+                    ],
+                    [
+                        'type' => 'switch',
+                        'label' => $this->l('Server purchase delivery'),
+                        'name' => 'TEC_MATOMO_PURCHASE_SERVER',
+                        'is_bool' => true,
+                        'values' => [
+                            ['id' => 'purchase_server_on', 'value' => 1, 'label' => $this->l('Enabled')],
+                            ['id' => 'purchase_server_off', 'value' => 0, 'label' => $this->l('Disabled')],
+                        ],
+                        'desc' => $this->l('Optional delivery without browser identifiers for later payment confirmations. Requires Cookieless mode, no consent manager and a scheduled CLI worker: php modules/tec_matomo/bin/process-purchases.php --shop=1 --limit=10. Replace the shop ID. Replaces the browser purchase event; does not preserve browser campaign attribution. Disabled by default.'),
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('Purchase tracking token'),
+                        'name' => 'TEC_MATOMO_PURCHASE_TOKEN',
+                        'maxlength' => 256,
+                        'desc' => $this->l('Optional server tracking credential if required by Matomo. Use HTTPS and a dedicated tracking credential. The reporting API token is not reused. Leave empty or unchanged to preserve the stored token.'),
+                    ],
 
                     // === FEATURES ===
                     array(
@@ -483,6 +520,10 @@ class Tec_matomo extends Module
             'TEC_MATOMO_SITEID'   => Tools::getValue('TEC_MATOMO_SITEID', Configuration::get('TEC_MATOMO_SITEID')),
             'TEC_MATOMO_TOKEN'    => Tools::getValue('TEC_MATOMO_TOKEN', Configuration::get('TEC_MATOMO_TOKEN')),
 
+            'TEC_MATOMO_PURCHASE_STATES[]' => $this->qualifyingPurchaseStates((int) $this->context->shop->id),
+            'TEC_MATOMO_PURCHASE_SERVER' => (int) $this->purchaseConfiguration('TEC_MATOMO_PURCHASE_SERVER', (int) $this->context->shop->id),
+            'TEC_MATOMO_PURCHASE_TOKEN' => $this->maskedPurchaseToken((int) $this->context->shop->id),
+
             // FEATURES
             'TEC_MATOMO_ECOMMERCE'=> Tools::getValue('TEC_MATOMO_ECOMMERCE', Configuration::get('TEC_MATOMO_ECOMMERCE')),
             'TEC_MATOMO_USERID'   => Tools::getValue('TEC_MATOMO_USERID', Configuration::get('TEC_MATOMO_USERID')),
@@ -543,6 +584,11 @@ class Tec_matomo extends Module
 
         // Leggo i valori già “merge-ati” con Configuration
         $form_values = $this->getConfigFormValues();
+        try {
+            $purchaseSettings = $this->validatePurchaseForm();
+        } catch (InvalidArgumentException $exception) {
+            return $this->displayError($this->l($exception->getMessage()));
+        }
 
         // Enum privacy consentiti
         $allowedPrivacy = array('none', 'cookieless', 'consent');
@@ -551,6 +597,16 @@ class Tec_matomo extends Module
         foreach (array_keys($form_values) as $key) {
 
             switch ($key) {
+                case 'TEC_MATOMO_PURCHASE_STATES[]':
+                    Configuration::updateValue('TEC_MATOMO_PURCHASE_STATES', $purchaseSettings['states']);
+                    break;
+                case 'TEC_MATOMO_PURCHASE_SERVER':
+                    Configuration::updateValue($key, $purchaseSettings['server']);
+                    break;
+                case 'TEC_MATOMO_PURCHASE_TOKEN':
+                    Configuration::updateValue($key, $purchaseSettings['token']);
+                    break;
+
 
                 case 'TEC_MATOMO_CODE':
                     // se lo usi in futuro come campo libero
@@ -1855,72 +1911,57 @@ class Tec_matomo extends Module
         return $this->renderOrderConfirmationTracking($params);
     }
 
+    /** Render only purchases allowed by the same policy used by the outbox worker. */
     protected function renderOrderConfirmationTracking($params)
     {
-        $active = Configuration::get('TEC_MATOMO_ACTIVE');
-        $ecommerce = Configuration::get('TEC_MATOMO_ECOMMERCE');
-
-        if (empty($params['order']) || !Validate::isLoadedObject($params['order'])) {
+        if (empty($params['order']) || !($params['order'] instanceof Order) || !Validate::isLoadedObject($params['order'])) {
             return '';
         }
-
         $order = $params['order'];
+        if (!$this->purchaseEligible($order)) {
+            return '';
+        }
+        if ((int) $this->purchaseConfiguration('TEC_MATOMO_PURCHASE_SERVER', (int) $order->id_shop) === 1) {
+            try {
+                $this->enqueuePurchase($order);
+            } catch (Exception $exception) {
+                PrestaShopLogger::addLog('tec_matomo: purchase enqueue failed.', 3);
+            }
+
+            return '';
+        }
         $idOrder = (int) $order->id;
         if (isset($this->trackedOrderIds[$idOrder])) {
             return '';
         }
-        $this->trackedOrderIds[$idOrder] = true;
+        try {
+            $payload = $this->purchasePayload($order);
+        } catch (Exception $exception) {
+            PrestaShopLogger::addLog('tec_matomo: invalid purchase data.', 3);
 
-        $order_id = $order->reference;
-        $total_paid = $order->total_paid;
-        $total_paid_tax_excl = $order->total_paid_tax_excl;
-        $total_tax = $total_paid - $total_paid_tax_excl;
-        $total_shipping = $order->total_shipping;
-        $total_discounts = (float)$order->total_discounts; //discount coupon
-
-        if ($total_discounts == 0) {
-            $total_discounts = 'false';
+            return '';
         }
-        $order_list_details = [];
-
-        $ord_details = $order->getOrderDetailList();
-        foreach ($ord_details as $detail) {
-            $product_id = $detail['product_id'];
-            $product_attribute_id = $detail['product_attribute_id'];
-            $product_sku = $product_id.'v'.$product_attribute_id;
-            $lang_id = (int)Configuration::get('PS_LANG_DEFAULT');
-            $product = new Product($product_id, false, $lang_id);
-            $product_name = $product->name;
-            $product_category = $product->category;
-            if ($product_category == '') {
-                $product_category = $this->l('Not detected');
-            }
-            $product_price = isset($detail['unit_price_tax_incl']) ? (float) $detail['unit_price_tax_incl'] : (float) $detail['product_price'];
-            $product_quantity = $detail['product_quantity'];
-            $order_list_details[] = [
-                'product_sku' => $product_sku,
-                'product_name' => $product_name,
-                'product_category' => $product_category,
-                'product_price' => (float) $product_price,
-                'product_quantity' => (int) $product_quantity
+        $items = [];
+        foreach ($payload['ec_items'] as $item) {
+            $items[] = [
+                'product_sku' => $item[0], 'product_name' => $item[1],
+                'product_category' => $item[2], 'product_price' => $item[3], 'product_quantity' => $item[4],
             ];
         }
-
+        $this->trackedOrderIds[$idOrder] = true;
         $this->smarty->assign([
-            'ecommerce' => $ecommerce,
-            'order_id' => $order_id,
-            'total_paid' => (float)$total_paid,
-            'total_paid_tax_excl' => (float)$total_paid_tax_excl,
-            'total_tax' => (float)$total_tax,
-            'total_shipping' => (float)$total_shipping,
-            'total_discounts' => $total_discounts,
-            'ord_details' => $order_list_details,
+            'ecommerce' => 1,
+            'order_id' => $this->purchaseIdentifier($order),
+            'total_paid' => $payload['revenue'],
+            'total_paid_tax_excl' => $payload['ec_st'],
+            'total_tax' => $payload['ec_tx'],
+            'total_shipping' => $payload['ec_sh'],
+            'total_discounts' => $payload['ec_dt'],
+            'ord_details' => $items,
         ]);
-        if ($active == 1 && $ecommerce ==1) {
-            return $this->display(__FILE__, 'orderconfirmation.tpl');
-        }
-    }
 
+        return $this->display(__FILE__, 'orderconfirmation.tpl');
+    }
 
     public function hookDisplayFooterProduct()
     {

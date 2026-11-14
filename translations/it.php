@@ -155,3 +155,16 @@ $_MODULE['<{tec_matomo}prestashop>stats_dashboard_4b6c7f879ffcb6777fcb5731bff7f1
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_3adbdb3ac060038aa0e6e6c138ef9873'] = 'Categoria';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_27b5f16c9f1777187fd03dc4a8aaf78a'] = 'Non sono disponibili dati sui ricavi per categoria per il periodo selezionato.';
 $_MODULE['<{tec_matomo}prestashop>stats_dashboard_fb9007ed02f7fb82c25a90e60e473efa'] = 'L\'API Matomo non e configurata. Inserisci URL Matomo, SiteID e token API nella configurazione del modulo.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_ac524f4c276f656f8b9dd47dec7c2b0e'] = 'Stati ordine validi per gli acquisti';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_e79d097ce334c7c8ecbdf3dfb59dd974'] = 'Solo gli stati selezionati generano acquisti. Per impostazione predefinita sono inclusi gli stati pagati. Aggiungi bonifico o contrassegno in attesa solo se la tua politica di rilevazione li considera acquisti. Errore, annullamento, rimborso e arretrato non pagato restano esclusi.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_e4f345e6a476204b808600bca301ffd3'] = 'Invio degli acquisti dal server';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_1ed06b219ddb401dfa22a241b2138b8c'] = 'Invio opzionale senza identificativi del browser per i pagamenti confermati successivamente. Richiede modalità senza cookie, nessun gestore del consenso e un processo CLI pianificato: php modules/tec_matomo/bin/process-purchases.php --shop=1 --limit=10. Sostituisci l’ID negozio. Sostituisce l’evento acquisto del browser e non conserva l’attribuzione alle campagne del browser. Disattivato per impostazione predefinita.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_8693e3830262522d54f0acbb1f0d51d0'] = 'Token per il tracciamento degli acquisti';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_8377301728e9972a4667c84e71056723'] = 'Credenziale opzionale per il tracciamento dal server, se richiesta da Matomo. Usa HTTPS e una credenziale dedicata. Il token API dei report non viene riutilizzato. Lascia vuoto o invariato per conservare il token memorizzato.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_e4ce4060241e6c1d0297fe9ae1544340'] = 'Gli stati ordine selezionati per gli acquisti non sono validi.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_b9f05bceb228ee676a0a4165ee0540a0'] = 'Impostazione di invio degli acquisti dal server non valida.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_958600db2cc3eccb76ba4b0967aff50a'] = 'Gli acquisti dal server richiedono la modalità senza cookie e il gestore del consenso disattivato.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_aa687ded7c5c19068efbac3f72f748c8'] = 'Token di tracciamento degli acquisti non valido.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_5e0c917aa9c194b24239d6391f76cf90'] = 'Il token di tracciamento degli acquisti richiede un URL Matomo HTTPS.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_74799e63988ee0eb2b4632b14cef6e47'] = 'URL di tracciamento Matomo non valido.';
+$_MODULE['<{tec_matomo}prestashop>tec_matomo_7e89f042b74fefa79c61db8883560868'] = 'Esegui l’aggiornamento del modulo prima di attivare l’invio degli acquisti dal server.';

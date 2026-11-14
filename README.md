@@ -4,7 +4,7 @@
 ![Built for PrestaShop](https://img.shields.io/badge/Built%20for-PrestaShop-DF0067?logo=prestashop&logoColor=white)  
 
 Matomo Analytics integration module for PrestaShop with advanced ecommerce tracking and privacy features.  
-This module allows merchants to replace Google Analytics with Matomo, keeping **100% data ownership** and ensuring full **GDPR compliance**.
+Maintained by **Tecnoacquisti.com®**, the module connects the shop to the merchant’s Matomo installation and provides configurable ecommerce and privacy controls.
 
 ## Features
 
@@ -62,6 +62,99 @@ The widget also shows visit-source data for the product page by querying Matomo 
 Back-office API calls use a five-second connection timeout and a twenty-second
 total timeout. Product referrer lookups are limited to 20 rows per shop language
 so an unavailable or slow Matomo instance does not indefinitely block the editor.
+
+## Purchase eligibility and delayed payments
+
+Since version 1.3.0, reaching the confirmation page is not enough to record a
+purchase. **Qualifying purchase states** defaults to the states marked as paid
+by PrestaShop. Merchants can explicitly include pending bank transfer or
+cash-on-delivery states if their reporting policy counts those orders as
+purchases. Payment error, cancellation, refund and unpaid backorder states are
+always excluded, including when an error is followed by an automatic unpaid
+backorder transition. The order total alone is never used as proof of payment.
+A legitimate free order can qualify through its state.
+
+Settings and Matomo targets are read for the order's shop. Configure each shop
+when its purchase policy differs. An empty selection disables purchases.
+
+### Browser delivery (default)
+
+Eligible purchases are emitted on the confirmation page. Existing browser
+privacy settings and consent integrations remain in control. A payment that
+becomes eligible after the customer leaves the page requires the server mode
+below or another confirmation-page visit.
+
+### Optional server delivery
+
+**Server purchase delivery** replaces the browser purchase event. Order creation
+and order-state hooks enqueue eligible purchases without making network calls
+during checkout. The worker also reconciles a bounded batch of eligible orders
+created after the upgrade, recovering missed hooks without replaying orders
+already present in the delivery ledger. A CLI worker sends them even if the customer does not revisit
+the shop. Product and cart browsing events continue through the browser.
+
+This mode is available only with **Cookieless** privacy mode and the consent
+manager **disabled**. A server callback has no browser consent context; the
+module refuses this mode with consent-controlled settings. If those settings
+are changed outside the form, server delivery pauses rather than falling back
+to a competing purchase channel.
+
+The purchase reference and product data are still sent to Matomo. Server
+purchases do not forward the customer's IP address, user agent, email,
+browser cookies or User ID. They use a synthetic visitor ID specific to the
+order. This is cookieless delivery, not a guarantee of anonymous data. It does not
+preserve the original browser session or campaign
+attribution and can appear as separate visits. Matomo records the delivery
+time. The Matomo server still receives the tracking server's network address.
+Choose this mode only when these reporting semantics suit the shop.
+
+Run the worker every minute from the shop root, once for each shop ID:
+
+```bash
+php modules/tec_matomo/bin/process-purchases.php --shop=1 --limit=10
+```
+
+The worker is CLI-only and needs no secret in a URL. Each run processes at most
+20 entries. PHP cURL and a secure random source (native `random_bytes` or
+OpenSSL on PHP 5.6) are required. Failures use exponential backoff, bounded at one hour between
+attempts, with at most ten attempts. Worker output includes aggregate queue
+counts. After correcting a delivery problem, explicitly retry failed entries:
+
+```bash
+php modules/tec_matomo/bin/process-purchases.php --shop=1 --limit=10 --retry-failed
+```
+
+An optional **Purchase tracking token** can be supplied if the Matomo tracker
+requires authentication. It is separate from the reporting API token, masked
+in the form, preserved on empty or unchanged input, sent only in an HTTPS POST
+body and never exposed in browser code or normal logs. The tracker must return
+HTTP 204 with `send_image=0`; redirects are not followed. Matomo filters must
+allow tracking from the worker. An HTTP acknowledgement does not independently
+verify storage in a Matomo report.
+
+The outbox has one entry per shop, order and target, atomic worker leases and
+persistent acknowledgement. Retries reuse a stable purchase ID, including
+when a response or acknowledgement is lost. This relies on Matomo retaining
+order IDs for deduplication; its order-ID anonymisation setting can weaken
+deduplication after ambiguous failures. Delivery rechecks eligibility and
+the target before sending. A changed target or an order that no longer
+qualifies is skipped. Purchases already acknowledged are never reset by the
+retry command. Later refunds are not automatically reversed in Matomo.
+
+### Upgrade and historical data
+
+Run the module upgrade to create the outbox and register the order lifecycle
+hooks. Version 1.3.0 records a cutoff: the highest existing order ID at the first upgrade
+or installation defines the replay boundary. Earlier orders are not replayed
+automatically, independently of shop timezones. New purchase IDs include shop
+and order IDs, separating stores and split orders. Historical pending orders
+need a separately reviewed backfill; previously recorded false purchases are
+not removed from Matomo by this update.
+
+The minimal outbox ledger and cutoff survive uninstall/reinstall to prevent
+accidental replay. The ledger stores order/shop IDs, a target hash, status,
+attempts and timestamps; it stores no product payload, email addresses or network data.
+It must not be deleted as routine cache cleanup.
 
 ## Cookie consent integrations
 
